@@ -86,7 +86,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_expense_entry_get() {
+    async fn expense_entry_get() {
         let response = arrange_and_act_get_request(&String::from(TEST_VALID_UUID)).await;
 
         assert_eq!(response.status(), StatusCode::OK);
@@ -99,7 +99,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_expense_entry_get_not_found() {
+    async fn expense_entry_get_not_found() {
         let response = arrange_and_act_get_request(&String::from(TEST_INVALID_UUID)).await;
 
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
