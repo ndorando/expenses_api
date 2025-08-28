@@ -172,7 +172,7 @@ mod tests {
         );
         let response = arrange_and_act_post_request(missing_cost_shares_json).await;
 
-        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
     }
 
     // this can only happen once the DB is implemented

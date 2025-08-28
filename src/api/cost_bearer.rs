@@ -215,7 +215,7 @@ mod tests {
         }).to_string();
         let response = arrange_and_act_post_request(new_cost_bearer).await;
 
-        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
     }
 
     #[tokio::test]
@@ -227,7 +227,7 @@ mod tests {
         }).to_string();
         let response = arrange_and_act_post_request(wrong_type_json).await;
 
-        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
     }
 
     #[tokio::test]
@@ -270,7 +270,7 @@ mod tests {
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
         let body: axum::body::Bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to recieve body from response.");
         let error_message = String::from_utf8(body.to_vec()).unwrap();
-        assert_eq!(error_message, " Cost Bearer not found.");
+        assert_eq!(error_message, "Cost Bearer not found.");
     }
 
     #[tokio::test]
