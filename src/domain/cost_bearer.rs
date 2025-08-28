@@ -24,8 +24,8 @@ impl CostBearer {
         }
 
         // verify that exists_to is not before exists_from
-        if exists_to.is_some(){
-            if exists_to.unwrap() <= exists_from {
+        if let Some(to) = exists_to {
+            if to <= exists_from {
                 return Err(CostBearerValidationError::InvalidDate);
             }
         }
