@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
 
-use crate::{domain::cost_bearer::{CostBearer, CostBearerValidationError}, service::application_error::{ApplicationError, ApplicationErrorType}};
+use crate::domain::cost_bearer::{CostBearer, CostBearerValidationError};
+use crate::service::application_error::{ApplicationError, ApplicationErrorType};
 
 // raw unvalidated user input DTO
 #[derive(serde::Serialize, serde::Deserialize)]

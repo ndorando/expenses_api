@@ -1,6 +1,8 @@
 use uuid::Uuid;
 
-use crate::{domain::cost_bearer::CostBearer, service::{application_error::{ApplicationError, ApplicationErrorType}, cost_bearer::CostBearerNew}};
+use crate::domain::cost_bearer::CostBearer;
+use crate::service::application_error::{ApplicationError, ApplicationErrorType};
+use crate::service::cost_bearer::CostBearerNew;
 
 const TEST_COST_BEARER_ID: &str = "123e4567-e89b-12d3-a456-426614174000";
 
