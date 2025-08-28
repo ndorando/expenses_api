@@ -30,7 +30,6 @@ pub async fn cost_bearer_get(Path(id): Path<Uuid>) -> Result<Json<CostBearer>, A
 
 # [cfg(test)]
 mod tests {
-    use super::*;
     use axum::{body::Body, http::{Method, Request, StatusCode}, response::Response};
     use chrono::{TimeZone, Utc};
     use serde_json::json;
