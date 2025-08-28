@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
-use crate::util::cost_share::CostShare;
+
+use crate::domain::cost_share::CostShare;
 
 #[derive(Debug)]
 pub enum ExpenseEntryValidationError {

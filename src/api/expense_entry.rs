@@ -30,7 +30,7 @@ pub async fn expense_entry_get(Path(id): Path<Uuid>) -> Result<Json<ExpenseEntry
 
 #[cfg(test)]
 mod tests {
-    use crate::util::cost_share::CostShare;
+    use crate::domain::cost_share::CostShare;
 
     use super::*;
     use axum::{body::Body, http::{Method, Request, StatusCode}, response::Response};

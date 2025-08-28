@@ -1,6 +1,9 @@
 use uuid::Uuid;
 
-use crate::{domain::expense_entry::{ExpenseEntry, ExpenseEntryValidationError}, service::application_error::{ApplicationError, ApplicationErrorType}, util::cost_share::CostShare};
+use crate::domain::expense_entry::{ExpenseEntry, ExpenseEntryValidationError};
+use crate::domain::cost_share::CostShare;
+use crate::service::application_error::{ApplicationError, ApplicationErrorType};
+
 
 // raw unvalidated user input DTO
 #[derive(serde::Serialize, serde::Deserialize)]

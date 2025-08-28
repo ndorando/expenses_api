@@ -1,6 +1,8 @@
 use uuid::Uuid;
 
-use crate::{domain::expense_entry::ExpenseEntry, util::cost_share::CostShare, service::application_error::{ApplicationError, ApplicationErrorType}};
+use crate::domain::expense_entry::ExpenseEntry;
+use crate::domain::cost_share::CostShare;
+use crate::service::application_error::{ApplicationError, ApplicationErrorType};
 
 const TEST_EXPENSE_ENTRY_ID: &str = "123e4567-e89b-12d3-a456-426614174000";
 
