@@ -4,7 +4,7 @@ use crate::domain::cost_bearer::CostBearer;
 use crate::service::application_error::{ApplicationError, ApplicationErrorType};
 use crate::service::cost_bearer::CostBearerNew;
 
-const TEST_COST_BEARER_ID: &str = "123e4567-e89b-12d3-a456-426614174000";
+use crate::test_util::test_utility::TEST_VALID_UUID;
 
 pub fn create(dto: CostBearerNew) -> Result<CostBearer, ApplicationError> {
     let entry = CostBearer::try_from(dto)?;
@@ -19,9 +19,8 @@ pub fn update(id: Uuid, dto: CostBearerNew) -> Result<CostBearer, ApplicationErr
 }
 
 pub fn delete(id: Uuid) -> Result<(), ApplicationError> {
-    let test_id = Uuid::parse_str(TEST_COST_BEARER_ID).unwrap();
     match id {
-        id if id == test_id => Ok(()),
+        id if id == TEST_VALID_UUID => Ok(()),
         _ => Err(ApplicationError { error_type: ApplicationErrorType::NotFound, message: String::from("Cost Bearer not found.") })
     }
 }

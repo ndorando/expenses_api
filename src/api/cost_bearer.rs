@@ -35,8 +35,7 @@ mod tests {
     use chrono::{TimeZone, Utc};
     use serde_json::json;
     use tower::ServiceExt;
-
-    const TEST_COST_BEARER_ID: &str = "123e4567-e89b-12d3-a456-426614174000";
+    use crate::test_util::test_utility::{TEST_VALID_UUID, TEST_INVALID_UUID};
 
     async fn arrange_and_act_get_request(id: &str) -> Response<Body> {
         let app = crate::api::routes::setup_routing().await;
@@ -87,7 +86,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_cost_bearer_get() {
-        let response = arrange_and_act_get_request(TEST_COST_BEARER_ID).await;
+        let response = arrange_and_act_get_request(&String::from(TEST_VALID_UUID)).await;
 
         assert_eq!(response.status(), StatusCode::OK);
         let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to recieve body from response.");
@@ -99,7 +98,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_expense_entry_get_not_found() {
-        let response = arrange_and_act_get_request("123e4567-e89b-12d3-a456-426614174001").await;
+        let response = arrange_and_act_get_request(&String::from(TEST_INVALID_UUID)).await;
 
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
         let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
@@ -258,7 +257,7 @@ mod tests {
 
     #[tokio::test]
     async fn cost_bearer_delete() {
-        let response = arrange_and_act_delete_request(TEST_COST_BEARER_ID).await;
+        let response = arrange_and_act_delete_request(&String::from(TEST_VALID_UUID)).await;
 
         assert_eq!(response.status(), StatusCode::NO_CONTENT);
         let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to recieve body from response.");
@@ -267,7 +266,7 @@ mod tests {
 
     #[tokio::test]
     async fn cost_bearer_delete_fails() {
-        let response = arrange_and_act_delete_request(Uuid::new_v4().to_string().as_str()).await;
+        let response = arrange_and_act_delete_request(&String::from(TEST_INVALID_UUID)).await;
 
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
         let body: axum::body::Bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to recieve body from response.");

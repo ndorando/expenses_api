@@ -36,10 +36,9 @@ mod tests {
     use axum::{body::Body, http::{Method, Request, StatusCode}, response::Response};
     use serde_json::json;
     use tower::ServiceExt;
+    use crate::test_util::test_utility::{TEST_VALID_UUID, TEST_INVALID_UUID};
 
-    const TEST_EXPENSE_ENTRY_ID: &str = "123e4567-e89b-12d3-a456-426614174000";
-
-     async fn arrange_and_act_get_request(id: &str) -> Response<Body> {
+    async fn arrange_and_act_get_request(id: &str) -> Response<Body> {
         let app = crate::api::routes::setup_routing().await;
         let uri = format!("/expense_entries/{}", id);
 
@@ -88,7 +87,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_expense_entry_get() {
-        let response = arrange_and_act_get_request(TEST_EXPENSE_ENTRY_ID).await;
+        let response = arrange_and_act_get_request(&String::from(TEST_VALID_UUID)).await;
 
         assert_eq!(response.status(), StatusCode::OK);
         let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to recieve body from response.");
@@ -101,7 +100,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_expense_entry_get_not_found() {
-        let response = arrange_and_act_get_request("123e4567-e89b-12d3-a456-426614174001").await;
+        let response = arrange_and_act_get_request(&String::from(TEST_INVALID_UUID)).await;
 
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
         let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
@@ -328,7 +327,7 @@ mod tests {
     
     #[tokio::test]
     async fn expense_entry_delete() {
-        let response = arrange_and_act_delete_request(TEST_EXPENSE_ENTRY_ID).await;
+        let response = arrange_and_act_delete_request(&String::from(TEST_VALID_UUID)).await;
 
         assert_eq!(response.status(), StatusCode::NO_CONTENT);
         let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to recieve body from response.");
@@ -339,7 +338,7 @@ mod tests {
 
     #[tokio::test]
     async fn expense_entry_delete_fails() {
-        let response = arrange_and_act_delete_request(Uuid::new_v4().to_string().as_str()).await;
+        let response = arrange_and_act_delete_request(&String::from(TEST_INVALID_UUID)).await;
 
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
         let body: axum::body::Bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to recieve body from response.");

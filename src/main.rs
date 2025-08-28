@@ -1,7 +1,9 @@
 mod api;
 mod domain;
-mod util;
 mod service;
+
+//#[cfg(any(test, feature = "test-utils"))]
+pub mod test_util;
 
 use api::routes::setup_routing;
 
