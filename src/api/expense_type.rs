@@ -26,3 +26,168 @@ pub async fn expense_type_get(Path(id): Path<Uuid>) -> Result<Json<ExpenseType>,
     let found_expense_type = crate::service::query::expense_type::get(id)?;
     Ok(Json(found_expense_type))
 }
+
+#[cfg(test)]
+mod tests {
+    use axum::{body::Body, http::{Method, Request, StatusCode}, response::Response};
+    use serde_json::json;
+    use tower::ServiceExt;
+    use crate::test_util::test_utility::{TEST_VALID_UUID, TEST_INVALID_UUID};
+    use crate::service::expense_type::ExpenseTypeNew;
+
+    async fn arrange_and_act_get_request(id: &str) -> Response<Body> {
+        let app = crate::api::routes::setup_routing().await;
+        let uri = format!("/expense_types/{}", id);
+
+        let request = Request::builder()
+                                .method(Method::GET)
+                                .uri(&uri)
+                                .body(Body::empty())
+                                .expect("Failed to finalize request.");
+
+        let response = app.oneshot(request).await.expect("Failed to receive response.");
+
+        response
+    }
+
+    async fn arrange_and_act_post_request(expense_type: String) -> Response<Body> {
+        let app = crate::api::routes::setup_routing().await;
+        let uri = "/expense_types";
+        let body = Body::from(expense_type);
+        
+        let request = Request::builder()
+                                .method(Method::POST)
+                                .uri(uri)
+                                .header("content-type", "application/json")
+                                .body(body)
+                                .expect("Failed to finalize request.");
+
+        let response = app.oneshot(request).await.expect("Failed to receive response.");
+
+        response
+    }
+
+    #[tokio::test]
+    async fn expense_type_get() {
+        let response = arrange_and_act_get_request(&String::from(TEST_VALID_UUID)).await;
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
+        let expense_type: crate::domain::expense_type::ExpenseType = serde_json::from_slice(&body).expect("Failed to parse response into ExpenseType struct."); 
+        assert_eq!(expense_type.name(), "Food");
+        assert_eq!(expense_type.description(), "Expenses related to food and dining");
+        assert!(!expense_type.id().is_nil());
+    }
+
+    #[tokio::test]
+    async fn expense_type_get_fails_not_found() {
+        let response = arrange_and_act_get_request(&String::from(TEST_INVALID_UUID)).await;
+
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let error_message = String::from_utf8(body.to_vec()).unwrap();
+        assert_eq!(error_message, "Expense type not found.");
+    }
+
+    #[tokio::test]
+    async fn expense_type_get_fails_invalid_uuid() {
+        let response = arrange_and_act_get_request("not-a-uuid").await;
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn expense_type_post() {
+        let new_expense_type = ExpenseTypeNew{
+            name: String::from("Transportation"),
+            description: String::from("Expenses related to transportation and travel")
+        };
+        let response = arrange_and_act_post_request(json!(new_expense_type).to_string()).await;
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
+        let expense_type: crate::domain::expense_type::ExpenseType = serde_json::from_slice(&body).expect("Failed to parse response into ExpenseType struct.");
+
+        assert_eq!(expense_type.name(), "Transportation");
+        assert_eq!(expense_type.description(), "Expenses related to transportation and travel");
+        assert!(!expense_type.id().is_nil());
+    }
+
+    #[tokio::test]
+    async fn expense_type_post_fails_invalid_json() {
+        let invalid_json = String::from("{deliberately: invalid, json: parameter");
+        let response = arrange_and_act_post_request(invalid_json).await;
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
+        let my_str = str::from_utf8(&body);
+        assert_eq!(my_str.unwrap(), "Failed to parse the request body as JSON: key must be a string at line 1 column 2");
+    }
+
+    #[tokio::test]
+    async fn expense_type_post_fails_empty_name() {
+        let empty_name_json = r#"{"name": "", "description": "Some description"}"#;
+        let response = arrange_and_act_post_request(empty_name_json.to_string()).await;
+
+        assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
+        let error_message = String::from_utf8(body.to_vec()).unwrap();
+        assert_eq!(error_message, "Json without valid name.");
+    }
+
+    #[tokio::test]
+    async fn expense_type_post_fails_whitespace_name() {
+        let whitespace_name_json = r#"{"name": "   \t  ", "description": "Some description"}"#;
+        let response = arrange_and_act_post_request(whitespace_name_json.to_string()).await;
+
+        assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
+        let error_message = String::from_utf8(body.to_vec()).unwrap();
+        assert_eq!(error_message, "Json without valid name.");
+    }
+
+    #[tokio::test]
+    async fn expense_type_post_fails_empty_description() {
+        let empty_description_json = r#"{"name": "Some name", "description": ""}"#;
+        let response = arrange_and_act_post_request(empty_description_json.to_string()).await;
+
+        assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
+        let error_message = String::from_utf8(body.to_vec()).unwrap();
+        assert_eq!(error_message, "Json without valid description.");
+    }
+
+    #[tokio::test]
+    async fn expense_type_post_fails_whitespace_description() {
+        let whitespace_description_json = r#"{"name": "Some name", "description": "   \t  "}"#;
+        let response = arrange_and_act_post_request(whitespace_description_json.to_string()).await;
+
+        assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
+        let error_message = String::from_utf8(body.to_vec()).unwrap();
+        assert_eq!(error_message, "Json without valid description.");
+    }
+
+    // this can only happen once the DB is implemented
+    /*#[tokio::test]
+    async fn expense_type_post_fails_duplicate_name() {
+        // First, create an expense type
+        let first_expense_type = ExpenseTypeNew{
+            name: String::from("Food"),
+            description: String::from("First food expense type")
+        };
+        let response = arrange_and_act_post_request(json!(first_expense_type).to_string()).await;
+        assert_eq!(response.status(), StatusCode::OK);
+
+        // Then try to create another with the same name
+        let duplicate_expense_type = ExpenseTypeNew{
+            name: String::from("Food"),
+            description: String::from("Second food expense type")
+        };
+        let response = arrange_and_act_post_request(json!(duplicate_expense_type).to_string()).await;
+        assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
+        let error_message = String::from_utf8(body.to_vec()).unwrap();
+        assert_eq!(error_message, "Expense type with this name already exists.");
+    }*/
+}
