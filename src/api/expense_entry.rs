@@ -33,6 +33,7 @@ mod tests {
     use crate::domain::cost_share::CostShare;
 
     use super::*;
+    use chrono::TimeZone;
     use axum::{body::Body, http::{Method, Request, StatusCode}, response::Response};
     use serde_json::json;
     use tower::ServiceExt;
@@ -121,7 +122,7 @@ mod tests {
         let cost_uuid = Uuid::new_v4();
         let expense_type_uuid = Uuid::new_v4();
 
-        let new_expense_entry = ExpenseEntryNew{cost_shares: vec![CostShare{cost_bearer_id: cost_uuid, amount:12.5}], expense_type: expense_type_uuid, description: String::from("I bought something today.")};
+        let new_expense_entry = ExpenseEntryNew{cost_shares: vec![CostShare{cost_bearer_id: cost_uuid, amount:12.5}], expense_type: expense_type_uuid, description: String::from("I bought something today."), expense_date: None};
         let response = arrange_and_act_post_request(json!(new_expense_entry).to_string()).await;
 
         assert_eq!(response.status(), StatusCode::OK);
@@ -135,7 +136,7 @@ mod tests {
         assert_eq!(entry.description(), "I bought something today.");
 
         let second_cost_uuid = Uuid::new_v4();
-        let new_expense_entry = ExpenseEntryNew{cost_shares: vec![CostShare{cost_bearer_id: cost_uuid, amount:12.5}, CostShare{cost_bearer_id: second_cost_uuid, amount: -12.5}], expense_type: expense_type_uuid, description: String::from("I bought something today.")};
+        let new_expense_entry = ExpenseEntryNew{cost_shares: vec![CostShare{cost_bearer_id: cost_uuid, amount:12.5}, CostShare{cost_bearer_id: second_cost_uuid, amount: -12.5}], expense_type: expense_type_uuid, description: String::from("I bought something today."), expense_date: None};
         let response = arrange_and_act_post_request(json!(new_expense_entry).to_string()).await;
 
         assert_eq!(response.status(), StatusCode::OK);
@@ -150,6 +151,62 @@ mod tests {
 
         assert_eq!(entry.expense_type(), expense_type_uuid);
         assert_eq!(entry.description(), "I bought something today.");
+    }
+
+    #[tokio::test]
+    async fn expense_entry_post_with_explicit_expense_date() {
+        let cost_uuid = Uuid::new_v4();
+        let expense_type_uuid = Uuid::new_v4();
+
+        // fixed date for deterministic assertion
+        let explicit_date = chrono::Utc.with_ymd_and_hms(2024, 10, 1, 12, 30, 45).unwrap();
+
+        let new_expense_entry = ExpenseEntryNew{
+            cost_shares: vec![CostShare{cost_bearer_id: cost_uuid, amount:12.5}],
+            expense_type: expense_type_uuid,
+            description: String::from("Dated explicitly"),
+            expense_date: Some(explicit_date),
+        };
+        let response = arrange_and_act_post_request(serde_json::to_string(&new_expense_entry).unwrap()).await;
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to recieve body from response.");
+        let entry: crate::domain::expense_entry::ExpenseEntry = serde_json::from_slice(&body).expect("Failed to parse response into ExpenseEntry struct.");
+
+        assert_eq!(entry.expense_date(), explicit_date);
+        assert_eq!(entry.expense_type(), expense_type_uuid);
+        assert_eq!(entry.description(), "Dated explicitly");
+        assert_eq!(entry.cost_shares().len(), 1);
+        assert_eq!(entry.cost_shares()[0].cost_bearer_id, cost_uuid);
+        assert_eq!(entry.cost_shares()[0].amount, 12.5);
+    }
+
+    #[tokio::test]
+    async fn expense_entry_post_with_none_uses_now() {
+        let cost_uuid = Uuid::new_v4();
+        let expense_type_uuid = Uuid::new_v4();
+
+        let before = chrono::Utc::now();
+        let new_expense_entry = ExpenseEntryNew{
+            cost_shares: vec![CostShare{cost_bearer_id: cost_uuid, amount:12.5}],
+            expense_type: expense_type_uuid,
+            description: String::from("Implicit now date"),
+            expense_date: None,
+        };
+        let response = arrange_and_act_post_request(serde_json::to_string(&new_expense_entry).unwrap()).await;
+        let after = chrono::Utc::now();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to recieve body from response.");
+        let entry: crate::domain::expense_entry::ExpenseEntry = serde_json::from_slice(&body).expect("Failed to parse response into ExpenseEntry struct.");
+
+        let ts = entry.expense_date();
+        assert!(ts >= before && ts <= after, "timestamp {ts} not within [{before}, {after}]");
+        assert_eq!(entry.expense_type(), expense_type_uuid);
+        assert_eq!(entry.description(), "Implicit now date");
+        assert_eq!(entry.cost_shares().len(), 1);
+        assert_eq!(entry.cost_shares()[0].cost_bearer_id, cost_uuid);
+        assert_eq!(entry.cost_shares()[0].amount, 12.5);
     }
 
     #[tokio::test]

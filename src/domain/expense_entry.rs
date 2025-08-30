@@ -18,14 +18,14 @@ pub enum ExpenseEntryValidationError {
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct ExpenseEntry {
     id: Uuid,
-    timestamp: DateTime<Utc>,
+    expense_date: DateTime<Utc>,
     cost_shares: Vec<CostShare>,
     expense_type: Uuid,
     description: String,
 }       
 
 impl ExpenseEntry {
-    pub fn new(cost_shares: Vec<CostShare>, expense_type: Uuid, description: String) -> Result<Self, ExpenseEntryValidationError> {
+    pub fn new(cost_shares: Vec<CostShare>, expense_type: Uuid, description: String, expense_date: impl Into<Option<DateTime<Utc>>>) -> Result<Self, ExpenseEntryValidationError> {
 
         // validate cost shares
         if cost_shares.is_empty() {
@@ -63,7 +63,7 @@ impl ExpenseEntry {
 
         Ok(Self {
             id: Uuid::new_v4(),
-            timestamp: chrono::Utc::now(),
+            expense_date: expense_date.into().unwrap_or_else(chrono::Utc::now),
             cost_shares,
             expense_type,
             description,
@@ -73,8 +73,8 @@ impl ExpenseEntry {
     pub fn id(&self) -> Uuid {
         self.id
     }
-    pub fn timestamp(&self) -> DateTime<Utc> {
-        self.timestamp
+    pub fn expense_date(&self) -> DateTime<Utc> {
+        self.expense_date
     }
     pub fn cost_shares(&self) -> &[CostShare] {
         &self.cost_shares

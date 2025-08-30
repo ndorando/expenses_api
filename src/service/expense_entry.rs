@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use crate::domain::expense_entry::{ExpenseEntry, ExpenseEntryValidationError};
@@ -11,12 +12,13 @@ pub struct ExpenseEntryNew {
     pub cost_shares: Vec<CostShare>,
     pub expense_type: Uuid,
     pub description: String,
+    pub expense_date: Option<DateTime<Utc>>,
 } 
 
 impl TryFrom<ExpenseEntryNew> for ExpenseEntry {
     type Error = ExpenseEntryValidationError;
     fn try_from(new: ExpenseEntryNew) -> Result<Self, ExpenseEntryValidationError> {
-        ExpenseEntry::new(new.cost_shares, new.expense_type, new.description)
+        ExpenseEntry::new(new.cost_shares, new.expense_type, new.description, new.expense_date)
     }
 }
 
