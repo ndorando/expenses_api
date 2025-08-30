@@ -1,5 +1,6 @@
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
+use thiserror::Error;
 
 #[derive(serde::Serialize)]
 #[cfg_attr(test, derive(serde::Deserialize))]
@@ -10,9 +11,12 @@ pub struct CostBearer {
     exists_to: Option<DateTime<Utc>>
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum CostBearerValidationError {
+    #[error("Cost Bearer Validation failed: Name is empty or whitespace.")]
     MissingName,
+
+    #[error("Cost Bearer Validation failed: Date validation failed.")]
     InvalidDate,
 }
 

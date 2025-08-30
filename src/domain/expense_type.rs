@@ -1,4 +1,5 @@
 use uuid::Uuid;
+use thiserror::Error;
 
 // validated and guaranteed to be correct data
 #[derive(serde::Serialize)]
@@ -9,10 +10,13 @@ pub struct ExpenseType {
     description: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum ExpenseTypeValidationError {
+    #[error("Expense Type Validation failed: Name is empty or whitespace.")]
     MissingName,
+    #[error("Expense Type Validation failed: Description is empty or whitespace.")]
     MissingDescription,
+    #[error("Expense Type Validation failed: Name already in use.")]
     DuplicateName,
 }
 

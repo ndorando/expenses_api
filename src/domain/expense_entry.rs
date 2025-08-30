@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
+use thiserror::Error;
 
 use crate::domain::cost_share::CostShare;
 
@@ -14,14 +15,27 @@ pub struct ExpenseEntry {
     description: String,
 }       
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum ExpenseEntryValidationError {
+     #[error("Expense Entry Validation failed: No cost shares provided.")]
     MissingCostShares,
+
+    #[error("Expense Entry Validation failed: Cost shares malformed.")]
     MalformedCostShares,
-    InvalidCostBearerId,
-    DuplicateCostBearerIds,
+
+    #[error("Expense Entry Validation failed: Invalid cost bearer Id: {0}.")]
+    InvalidCostBearerId(Uuid),
+
+    #[error("Expense Entry Validation failed: Duplicate cost bearer Id: {0}.")]
+    DuplicateCostBearerIds(Uuid),
+
+    #[error("Expense Entry Validation failed: Missing expense type.")]
     MissingExpenseType,
-    InvalidExpenseTypeId,
+
+    #[error("Expense Entry Validation failed: Invalid expense type Id {0}.")]
+    InvalidExpenseTypeId(Uuid),
+
+    #[error("Expense Entry Validation failed: Description is empty or whitespace.")]
     MissingDescription,
 }
 
@@ -37,7 +51,7 @@ impl ExpenseEntry {
         for share in &cost_shares {
             // check for duplicate cost bearer ids
             if !seen.insert(share.cost_bearer_id) {
-                return Err(ExpenseEntryValidationError::DuplicateCostBearerIds);
+                return Err(ExpenseEntryValidationError::DuplicateCostBearerIds(share.cost_bearer_id));
             }
             // check for it never being 0.0
             if share.amount == 0.0f64 || share.cost_bearer_id.is_nil() {
