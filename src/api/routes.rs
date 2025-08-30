@@ -4,11 +4,13 @@ use axum::{routing::get, routing::post, Router};
 
 use crate::api::cost_bearer::{cost_bearer_delete, cost_bearer_get, cost_bearer_post, cost_bearer_update};
 use crate::api::expense_entry::{expense_entry_delete, expense_entry_get, expense_entry_post, expense_entry_update};
+use crate::api::expense_type::{expense_type_delete, expense_type_get, expense_type_post, expense_type_update};
 
 pub async fn setup_routing() -> Router {
     let router = Router::new()
                             .merge(route_expense_entry().await)
                             .merge(route_cost_bearer().await)
+                            .merge(route_expense_type().await)
                             .fallback(handle_routing_error);
 
     router
@@ -32,5 +34,13 @@ async fn route_cost_bearer() -> Router {
                             .route("/cost_bearers", post(cost_bearer_post));
 
     cost_bearer_router
+}
+
+async fn route_expense_type() -> Router {
+    let expense_type_router = Router::new()
+                            .route("/expense_types/{id}", get(expense_type_get).patch(expense_type_update).delete(expense_type_delete))
+                            .route("/expense_types", post(expense_type_post));
+
+    expense_type_router
 }
 
