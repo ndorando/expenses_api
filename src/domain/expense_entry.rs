@@ -3,6 +3,17 @@ use uuid::Uuid;
 
 use crate::domain::cost_share::CostShare;
 
+// validated and guaranteed to be correct data
+#[derive(serde::Serialize)]
+#[cfg_attr(test, derive(serde::Deserialize))]
+pub struct ExpenseEntry {
+    id: Uuid,
+    expense_date: DateTime<Utc>,
+    cost_shares: Vec<CostShare>,
+    expense_type: Uuid,
+    description: String,
+}       
+
 #[derive(Debug)]
 pub enum ExpenseEntryValidationError {
     MissingCostShares,
@@ -13,16 +24,6 @@ pub enum ExpenseEntryValidationError {
     InvalidExpenseTypeId,
     MissingDescription,
 }
-
-// validated and guaranteed to be correct data
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct ExpenseEntry {
-    id: Uuid,
-    expense_date: DateTime<Utc>,
-    cost_shares: Vec<CostShare>,
-    expense_type: Uuid,
-    description: String,
-}       
 
 impl ExpenseEntry {
     pub fn new(cost_shares: Vec<CostShare>, expense_type: Uuid, description: String, expense_date: impl Into<Option<DateTime<Utc>>>) -> Result<Self, ExpenseEntryValidationError> {

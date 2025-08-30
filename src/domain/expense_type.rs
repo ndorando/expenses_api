@@ -1,18 +1,19 @@
 use uuid::Uuid;
 
+// validated and guaranteed to be correct data
+#[derive(serde::Serialize)]
+#[cfg_attr(test, derive(serde::Deserialize))]
+pub struct ExpenseType {
+    id: Uuid,
+    name: String,
+    description: String,
+}
+
 #[derive(Debug)]
 pub enum ExpenseTypeValidationError {
     MissingName,
     MissingDescription,
     DuplicateName,
-}
-
-// validated and guaranteed to be correct data
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct ExpenseType {
-    id: Uuid,
-    name: String,
-    description: String,
 }
 
 impl ExpenseType {

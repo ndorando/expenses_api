@@ -7,11 +7,11 @@ use crate::service::cost_bearer::CostBearerNew;
 use crate::test_util::test_utility::TEST_VALID_UUID;
 
 pub fn create(dto: CostBearerNew) -> Result<CostBearer, ApplicationError> {
-    let entry = CostBearer::try_from(dto)?;
+    let cost_bearer = CostBearer::try_from(dto)?;
 
     // todo - save to DB
     
-    Ok(entry)
+    Ok(cost_bearer)
 }
 
 pub fn update(id: Uuid, dto: CostBearerNew) -> Result<CostBearer, ApplicationError>  {

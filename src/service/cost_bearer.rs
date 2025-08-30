@@ -6,9 +6,9 @@ use crate::service::application_error::{ApplicationError, ApplicationErrorType};
 // raw unvalidated user input DTO
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct CostBearerNew {
-    name: String,
-    exists_from: DateTime<Utc>,
-    exists_to: Option<DateTime<Utc>>
+    pub name: String,
+    pub exists_from: DateTime<Utc>,
+    pub exists_to: Option<DateTime<Utc>>
 } 
 
 impl TryFrom<CostBearerNew> for CostBearer {

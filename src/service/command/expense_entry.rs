@@ -7,11 +7,11 @@ use crate::service::expense_entry::ExpenseEntryNew;
 use crate::test_util::test_utility::TEST_VALID_UUID;
 
 pub fn create(dto: ExpenseEntryNew) -> Result<ExpenseEntry, ApplicationError> {
-    let entry = ExpenseEntry::try_from(dto)?;
+    let expense_entry = ExpenseEntry::try_from(dto)?;
 
     // todo - save to DB
     
-    Ok(entry)
+    Ok(expense_entry)
 }
 
 pub fn update(id: Uuid, dto: ExpenseEntryNew) -> Result<ExpenseEntry, ApplicationError>  {

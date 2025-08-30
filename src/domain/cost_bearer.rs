@@ -1,7 +1,8 @@
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize)]
+#[cfg_attr(test, derive(serde::Deserialize))]
 pub struct CostBearer {
     id: Uuid,
     name: String,
