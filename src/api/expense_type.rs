@@ -67,6 +67,21 @@ mod tests {
         response
     }
 
+    async fn arrange_and_act_delete_request(id: &str) -> Response<Body> {
+        let app = crate::api::routes::setup_routing().await;
+        let uri = format!("/expense_types/{}", id);
+    
+        let request = Request::builder()
+                                .method(Method::DELETE)
+                                .uri(&uri)
+                                .body(Body::empty())
+                                .expect("Failed to finalize request.");
+    
+        let response = app.oneshot(request).await.expect("Failed to receive response.");
+    
+        response
+    }
+
     #[tokio::test]
     async fn expense_type_get() {
         let response = arrange_and_act_get_request(&String::from(TEST_VALID_UUID)).await;
@@ -190,4 +205,44 @@ mod tests {
         let error_message = String::from_utf8(body.to_vec()).unwrap();
         assert_eq!(error_message, "Expense type with this name already exists.");
     }*/
+
+    #[tokio::test]
+    async fn expense_type_update() {
+        // TODO: Implement once the update function is implemented in the service layer
+        // This test will verify that updating an expense type works correctly
+    }
+
+    #[tokio::test]
+    async fn expense_type_update_fails() {
+        // TODO: Implement once the update function is implemented in the service layer
+        // This test will verify that updating an expense type fails appropriately
+    }
+
+    #[tokio::test]
+    async fn expense_type_delete() {
+        let response = arrange_and_act_delete_request(&String::from(TEST_VALID_UUID)).await;
+
+        assert_eq!(response.status(), StatusCode::NO_CONTENT);
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
+        assert!(body.is_empty());
+
+        // still todo: verify that the deletion actually took place in the DB
+    }
+
+    #[tokio::test]
+    async fn expense_type_delete_fails() {
+        let response = arrange_and_act_delete_request(&String::from(TEST_INVALID_UUID)).await;
+
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        let body: axum::body::Bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
+        let error_message = String::from_utf8(body.to_vec()).unwrap();
+        assert_eq!(error_message, "Expense type not found.");
+    }
+
+    #[tokio::test]
+    async fn expense_type_delete_fails_invalid_uuid() {
+        let response = arrange_and_act_delete_request("not-a-uuid").await;
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
 }
