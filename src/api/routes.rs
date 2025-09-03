@@ -8,9 +8,9 @@ use crate::api::expense_type::{expense_type_delete, expense_type_get, expense_ty
 
 pub async fn setup_routing() -> Router {
     let router = Router::new()
-                            .merge(route_expense_entry().await)
-                            .merge(route_cost_bearer().await)
-                            .merge(route_expense_type().await)
+                            .merge(route_expense_entry())
+                            .merge(route_cost_bearer())
+                            .merge(route_expense_type())
                             .fallback(handle_routing_error);
 
     router
@@ -20,7 +20,7 @@ async fn handle_routing_error(uri: Uri) -> Response {
     (StatusCode::BAD_REQUEST, format!("No such endpoint: {}", uri.path())).into_response()
 }
 
-async fn route_expense_entry() -> Router {
+fn route_expense_entry() -> Router {
     let expense_entry_router = Router::new()
                             .route("/expense_entries/{id}", get(expense_entry_get).patch(expense_entry_update).delete(expense_entry_delete))
                             .route("/expense_entries", post(expense_entry_post));
@@ -28,7 +28,7 @@ async fn route_expense_entry() -> Router {
     expense_entry_router
 }
 
-async fn route_cost_bearer() -> Router {
+fn route_cost_bearer() -> Router {
     let cost_bearer_router = Router::new()
                             .route("/cost_bearers/{id}", get(cost_bearer_get).patch(cost_bearer_update).delete(cost_bearer_delete))
                             .route("/cost_bearers", post(cost_bearer_post));
@@ -36,7 +36,7 @@ async fn route_cost_bearer() -> Router {
     cost_bearer_router
 }
 
-async fn route_expense_type() -> Router {
+fn route_expense_type() -> Router {
     let expense_type_router = Router::new()
                             .route("/expense_types/{id}", get(expense_type_get).patch(expense_type_update).delete(expense_type_delete))
                             .route("/expense_types", post(expense_type_post));
