@@ -7,13 +7,11 @@ use crate::api::expense_entry::{expense_entry_delete, expense_entry_get, expense
 use crate::api::expense_type::{expense_type_delete, expense_type_get, expense_type_post, expense_type_update};
 
 pub async fn setup_routing() -> Router {
-    let router = Router::new()
-                            .merge(route_expense_entry())
-                            .merge(route_cost_bearer())
-                            .merge(route_expense_type())
-                            .fallback(handle_routing_error);
-
-    router
+    Router::new()
+        .merge(route_expense_entry())
+        .merge(route_cost_bearer())
+        .merge(route_expense_type())
+        .fallback(handle_routing_error)
 }
 
 async fn handle_routing_error(uri: Uri) -> Response {
@@ -21,26 +19,20 @@ async fn handle_routing_error(uri: Uri) -> Response {
 }
 
 fn route_expense_entry() -> Router {
-    let expense_entry_router = Router::new()
-                            .route("/expense_entries/{id}", get(expense_entry_get).patch(expense_entry_update).delete(expense_entry_delete))
-                            .route("/expense_entries", post(expense_entry_post));
-
-    expense_entry_router
+    Router::new()
+        .route("/expense_entries/{id}", get(expense_entry_get).patch(expense_entry_update).delete(expense_entry_delete))
+        .route("/expense_entries", post(expense_entry_post))
 }
 
 fn route_cost_bearer() -> Router {
-    let cost_bearer_router = Router::new()
-                            .route("/cost_bearers/{id}", get(cost_bearer_get).patch(cost_bearer_update).delete(cost_bearer_delete))
-                            .route("/cost_bearers", post(cost_bearer_post));
-
-    cost_bearer_router
+    Router::new()
+        .route("/cost_bearers/{id}", get(cost_bearer_get).patch(cost_bearer_update).delete(cost_bearer_delete))
+        .route("/cost_bearers", post(cost_bearer_post))
 }
 
 fn route_expense_type() -> Router {
-    let expense_type_router = Router::new()
-                            .route("/expense_types/{id}", get(expense_type_get).patch(expense_type_update).delete(expense_type_delete))
-                            .route("/expense_types", post(expense_type_post));
-
-    expense_type_router
+    Router::new()
+        .route("/expense_types/{id}", get(expense_type_get).patch(expense_type_update).delete(expense_type_delete))
+        .route("/expense_types", post(expense_type_post))
 }
 
