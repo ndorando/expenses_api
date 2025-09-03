@@ -30,17 +30,15 @@ impl CostBearer {
 
         // verify that exists_to is not before exists_from
         let exists_to = exists_to.into();
-        if let Some(to) = exists_to {
-            if to <= exists_from {
-                return Err(CostBearerValidationError::InvalidDate);
-            }
+        if let Some(to) = exists_to && to <= exists_from {
+            return Err(CostBearerValidationError::InvalidDate);
         }
 
         Ok(Self {
             id: Uuid::new_v4(),
-            name: name,
-            exists_from: exists_from,
-            exists_to: exists_to,
+            name,
+            exists_from,
+            exists_to,
         })
     }
 
