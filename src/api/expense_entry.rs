@@ -1,17 +1,22 @@
-use axum::{extract::Path, http::StatusCode, Json};
+use axum::{Json, extract::Path, http::StatusCode};
 use uuid::Uuid;
 
 use crate::domain::expense_entry::ExpenseEntry;
 use crate::service::application_error::ApplicationError;
 use crate::service::expense_entry::ExpenseEntryNew;
 
-pub async fn expense_entry_post(entry: Json<ExpenseEntryNew>) -> Result<Json<ExpenseEntry>, ApplicationError> {
+pub async fn expense_entry_post(
+    entry: Json<ExpenseEntryNew>,
+) -> Result<Json<ExpenseEntry>, ApplicationError> {
     let new_entry_dto: ExpenseEntryNew = entry.0;
     let created_entry = crate::service::command::expense_entry::create(new_entry_dto)?;
     Ok(Json(created_entry))
 }
 
-pub async fn expense_entry_update(Path(id): Path<Uuid>, entry: Json<ExpenseEntryNew>) -> Result<Json<ExpenseEntry>, ApplicationError> {
+pub async fn expense_entry_update(
+    Path(id): Path<Uuid>,
+    entry: Json<ExpenseEntryNew>,
+) -> Result<Json<ExpenseEntry>, ApplicationError> {
     let update_entry_dto: ExpenseEntryNew = entry.0;
     let updated_entry = crate::service::command::expense_entry::update(id, update_entry_dto)?;
     Ok(Json(updated_entry))
@@ -22,34 +27,42 @@ pub async fn expense_entry_delete(Path(id): Path<Uuid>) -> Result<StatusCode, Ap
     Ok(StatusCode::NO_CONTENT)
 }
 
-pub async fn expense_entry_get(Path(id): Path<Uuid>) -> Result<Json<ExpenseEntry>, ApplicationError> {
+pub async fn expense_entry_get(
+    Path(id): Path<Uuid>,
+) -> Result<Json<ExpenseEntry>, ApplicationError> {
     let found_entry = crate::service::query::expense_entry::get(id)?;
     Ok(Json(found_entry))
 }
-
 
 #[cfg(test)]
 mod tests {
     use crate::domain::cost_share::CostShare;
 
     use super::*;
+    use crate::test_util::test_utility::{TEST_INVALID_UUID, TEST_VALID_UUID};
+    use axum::{
+        body::Body,
+        http::{Method, Request, StatusCode},
+        response::Response,
+    };
     use chrono::TimeZone;
-    use axum::{body::Body, http::{Method, Request, StatusCode}, response::Response};
     use serde_json::json;
     use tower::ServiceExt;
-    use crate::test_util::test_utility::{TEST_VALID_UUID, TEST_INVALID_UUID};
 
     async fn arrange_and_act_get_request(id: &str) -> Response<Body> {
         let app = crate::api::routes::setup_routing().await;
         let uri = format!("/expense_entries/{}", id);
 
         let request = Request::builder()
-                                .method(Method::GET)
-                                .uri(&uri)
-                                .body(Body::empty())
-                                .expect("Failed to finalize request.");
+            .method(Method::GET)
+            .uri(&uri)
+            .body(Body::empty())
+            .expect("Failed to finalize request.");
 
-        let response = app.oneshot(request).await.expect("Failed to receive response.");
+        let response = app
+            .oneshot(request)
+            .await
+            .expect("Failed to receive response.");
 
         response
     }
@@ -58,15 +71,18 @@ mod tests {
         let app = crate::api::routes::setup_routing().await;
         let uri = "/expense_entries";
         let body = Body::from(entry);
-        
-        let request = Request::builder()
-                                .method(Method::POST)
-                                .uri(uri)
-                                .header("content-type", "application/json")
-                                .body(body)
-                                .expect("Failed to finalize request.");
 
-        let response = app.oneshot(request).await.expect("Failed to receive response.");
+        let request = Request::builder()
+            .method(Method::POST)
+            .uri(uri)
+            .header("content-type", "application/json")
+            .body(body)
+            .expect("Failed to finalize request.");
+
+        let response = app
+            .oneshot(request)
+            .await
+            .expect("Failed to receive response.");
 
         response
     }
@@ -76,12 +92,15 @@ mod tests {
         let uri = format!("/expense_entries/{}", id);
 
         let request = Request::builder()
-                                .method(Method::DELETE)
-                                .uri(&uri)
-                                .body(Body::empty())
-                                .expect("Failed to finalize request.");
+            .method(Method::DELETE)
+            .uri(&uri)
+            .body(Body::empty())
+            .expect("Failed to finalize request.");
 
-        let response = app.oneshot(request).await.expect("Failed to receive response.");
+        let response = app
+            .oneshot(request)
+            .await
+            .expect("Failed to receive response.");
 
         response
     }
@@ -91,8 +110,11 @@ mod tests {
         let response = arrange_and_act_get_request(&String::from(TEST_VALID_UUID)).await;
 
         assert_eq!(response.status(), StatusCode::OK);
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to recieve body from response.");
-        let entry: crate::domain::expense_entry::ExpenseEntry = serde_json::from_slice(&body).expect("Failed to parse response into ExpenseEntry struct."); 
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to recieve body from response.");
+        let entry: crate::domain::expense_entry::ExpenseEntry = serde_json::from_slice(&body)
+            .expect("Failed to parse response into ExpenseEntry struct.");
         assert_eq!(entry.cost_shares().len(), 1);
         assert_eq!(entry.cost_shares().first().unwrap().amount, 12.5);
         assert!(!entry.expense_type().is_nil());
@@ -104,7 +126,9 @@ mod tests {
         let response = arrange_and_act_get_request(&String::from(TEST_INVALID_UUID)).await;
 
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap();
         let error_message = String::from_utf8(body.to_vec()).unwrap();
         assert_eq!(error_message, "Expense entry not found.");
     }
@@ -118,16 +142,26 @@ mod tests {
 
     #[tokio::test]
     async fn expense_entry_post() {
-
         let cost_uuid = Uuid::new_v4();
         let expense_type_uuid = Uuid::new_v4();
 
-        let new_expense_entry = ExpenseEntryNew{cost_shares: vec![CostShare{cost_bearer_id: cost_uuid, amount:12.5}], expense_type: expense_type_uuid, description: String::from("I bought something today."), expense_date: None};
+        let new_expense_entry = ExpenseEntryNew {
+            cost_shares: vec![CostShare {
+                cost_bearer_id: cost_uuid,
+                amount: 12.5,
+            }],
+            expense_type: expense_type_uuid,
+            description: String::from("I bought something today."),
+            expense_date: None,
+        };
         let response = arrange_and_act_post_request(json!(new_expense_entry).to_string()).await;
 
         assert_eq!(response.status(), StatusCode::OK);
-        let body= axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to recieve body from response.");
-        let entry: crate::domain::expense_entry::ExpenseEntry = serde_json::from_slice(&body).expect("Failed to parse response into ExpenseEntry struct.");
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to recieve body from response.");
+        let entry: crate::domain::expense_entry::ExpenseEntry = serde_json::from_slice(&body)
+            .expect("Failed to parse response into ExpenseEntry struct.");
 
         assert_eq!(entry.cost_shares().len(), 1);
         assert_eq!(entry.cost_shares()[0].cost_bearer_id, cost_uuid);
@@ -136,12 +170,29 @@ mod tests {
         assert_eq!(entry.description(), "I bought something today.");
 
         let second_cost_uuid = Uuid::new_v4();
-        let new_expense_entry = ExpenseEntryNew{cost_shares: vec![CostShare{cost_bearer_id: cost_uuid, amount:12.5}, CostShare{cost_bearer_id: second_cost_uuid, amount: -12.5}], expense_type: expense_type_uuid, description: String::from("I bought something today."), expense_date: None};
+        let new_expense_entry = ExpenseEntryNew {
+            cost_shares: vec![
+                CostShare {
+                    cost_bearer_id: cost_uuid,
+                    amount: 12.5,
+                },
+                CostShare {
+                    cost_bearer_id: second_cost_uuid,
+                    amount: -12.5,
+                },
+            ],
+            expense_type: expense_type_uuid,
+            description: String::from("I bought something today."),
+            expense_date: None,
+        };
         let response = arrange_and_act_post_request(json!(new_expense_entry).to_string()).await;
 
         assert_eq!(response.status(), StatusCode::OK);
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to recieve second body from response.");
-        let entry: crate::domain::expense_entry::ExpenseEntry = serde_json::from_slice(&body).expect("Failed to parse second response into ExpenseEntry struct.");
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to recieve second body from response.");
+        let entry: crate::domain::expense_entry::ExpenseEntry = serde_json::from_slice(&body)
+            .expect("Failed to parse second response into ExpenseEntry struct.");
 
         assert_eq!(entry.cost_shares().len(), 2);
         assert_eq!(entry.cost_shares()[0].cost_bearer_id, cost_uuid);
@@ -159,19 +210,28 @@ mod tests {
         let expense_type_uuid = Uuid::new_v4();
 
         // fixed date for deterministic assertion
-        let explicit_date = chrono::Utc.with_ymd_and_hms(2024, 10, 1, 12, 30, 45).unwrap();
+        let explicit_date = chrono::Utc
+            .with_ymd_and_hms(2024, 10, 1, 12, 30, 45)
+            .unwrap();
 
-        let new_expense_entry = ExpenseEntryNew{
-            cost_shares: vec![CostShare{cost_bearer_id: cost_uuid, amount:12.5}],
+        let new_expense_entry = ExpenseEntryNew {
+            cost_shares: vec![CostShare {
+                cost_bearer_id: cost_uuid,
+                amount: 12.5,
+            }],
             expense_type: expense_type_uuid,
             description: String::from("Dated explicitly"),
             expense_date: Some(explicit_date),
         };
-        let response = arrange_and_act_post_request(serde_json::to_string(&new_expense_entry).unwrap()).await;
+        let response =
+            arrange_and_act_post_request(serde_json::to_string(&new_expense_entry).unwrap()).await;
 
         assert_eq!(response.status(), StatusCode::OK);
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to recieve body from response.");
-        let entry: crate::domain::expense_entry::ExpenseEntry = serde_json::from_slice(&body).expect("Failed to parse response into ExpenseEntry struct.");
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to recieve body from response.");
+        let entry: crate::domain::expense_entry::ExpenseEntry = serde_json::from_slice(&body)
+            .expect("Failed to parse response into ExpenseEntry struct.");
 
         assert_eq!(entry.expense_date(), explicit_date);
         assert_eq!(entry.expense_type(), expense_type_uuid);
@@ -187,21 +247,31 @@ mod tests {
         let expense_type_uuid = Uuid::new_v4();
 
         let before = chrono::Utc::now();
-        let new_expense_entry = ExpenseEntryNew{
-            cost_shares: vec![CostShare{cost_bearer_id: cost_uuid, amount:12.5}],
+        let new_expense_entry = ExpenseEntryNew {
+            cost_shares: vec![CostShare {
+                cost_bearer_id: cost_uuid,
+                amount: 12.5,
+            }],
             expense_type: expense_type_uuid,
             description: String::from("Implicit now date"),
             expense_date: None,
         };
-        let response = arrange_and_act_post_request(serde_json::to_string(&new_expense_entry).unwrap()).await;
+        let response =
+            arrange_and_act_post_request(serde_json::to_string(&new_expense_entry).unwrap()).await;
         let after = chrono::Utc::now();
 
         assert_eq!(response.status(), StatusCode::OK);
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to recieve body from response.");
-        let entry: crate::domain::expense_entry::ExpenseEntry = serde_json::from_slice(&body).expect("Failed to parse response into ExpenseEntry struct.");
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to recieve body from response.");
+        let entry: crate::domain::expense_entry::ExpenseEntry = serde_json::from_slice(&body)
+            .expect("Failed to parse response into ExpenseEntry struct.");
 
         let ts = entry.expense_date();
-        assert!(ts >= before && ts <= after, "timestamp {ts} not within [{before}, {after}]");
+        assert!(
+            ts >= before && ts <= after,
+            "timestamp {ts} not within [{before}, {after}]"
+        );
         assert_eq!(entry.expense_type(), expense_type_uuid);
         assert_eq!(entry.description(), "Implicit now date");
         assert_eq!(entry.cost_shares().len(), 1);
@@ -215,9 +285,14 @@ mod tests {
         let response = arrange_and_act_post_request(invalid_json).await;
 
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to recieve body from response.");
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to recieve body from response.");
         let my_str = str::from_utf8(&body);
-        assert_eq!(my_str.unwrap(), "Failed to parse the request body as JSON: key must be a string at line 1 column 2");
+        assert_eq!(
+            my_str.unwrap(),
+            "Failed to parse the request body as JSON: key must be a string at line 1 column 2"
+        );
     }
 
     #[tokio::test]
@@ -238,7 +313,7 @@ mod tests {
         let expense_uuid = Uuid::new_v4();
         let cost_bearer_uuid = Uuid::new_v4();
         let invalid_uuid_json = format!(
-            r#"{{"cost_shares":[{{"cost_bearer_id": "{}", "amount": 12.5}}], "expense_type": "{}", "description": "something something"}}"#, 
+            r#"{{"cost_shares":[{{"cost_bearer_id": "{}", "amount": 12.5}}], "expense_type": "{}", "description": "something something"}}"#,
             cost_bearer_uuid,
             expense_uuid
         );
@@ -256,13 +331,14 @@ mod tests {
         let cost_bearer_uuid = Uuid::nil();
         let nil_cost_bearer_json = format!(
             r#"{{"cost_shares":[{{"cost_bearer_id": "{}", "amount": 12.5}}], "expense_type": "{}", "description": "something something"}}"#,
-            cost_bearer_uuid,
-            expense_uuid
+            cost_bearer_uuid, expense_uuid
         );
         let response = arrange_and_act_post_request(nil_cost_bearer_json).await;
 
         assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to receive body from response.");
         let error_message = String::from_utf8(body.to_vec()).unwrap();
         assert_eq!(error_message, "Json without valid cost shares.");
     }
@@ -273,14 +349,14 @@ mod tests {
         let cost_bearer_uuid = Uuid::new_v4();
         let duplicate_cost_json = format!(
             r#"{{"cost_shares":[{{"cost_bearer_id": "{}", "amount": 12.5}}, {{"cost_bearer_id": "{}", "amount": -12.5}}], "expense_type": "{}", "description": "something something"}}"#,
-            cost_bearer_uuid, 
-            cost_bearer_uuid, 
-            expense_uuid
+            cost_bearer_uuid, cost_bearer_uuid, expense_uuid
         );
         let response = arrange_and_act_post_request(duplicate_cost_json).await;
 
         assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to receive body from response.");
         let error_message = String::from_utf8(body.to_vec()).unwrap();
         assert_eq!(error_message, "Json without valid cost shares.");
     }
@@ -291,13 +367,14 @@ mod tests {
         let cost_bearer_uuid = Uuid::new_v4();
         let invalid_cost_json = format!(
             r#"{{"cost_shares":[{{"cost_bearer_id": "{}", "amount": 0.0}}], "expense_type": "{}", "description": "something something"}}"#,
-            cost_bearer_uuid, 
-            expense_uuid
+            cost_bearer_uuid, expense_uuid
         );
         let response = arrange_and_act_post_request(invalid_cost_json).await;
 
         assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to receive body from response.");
         let error_message = String::from_utf8(body.to_vec()).unwrap();
         assert_eq!(error_message, "Json without valid cost shares.");
     }
@@ -312,14 +389,15 @@ mod tests {
         let response = arrange_and_act_post_request(empty_cost_json).await;
 
         assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to receive body from response.");
         let error_message = String::from_utf8(body.to_vec()).unwrap();
         assert_eq!(error_message, "Json without valid cost shares.");
     }
-    
 
     /*#[tokio::test]
-    async fn expense_entry_post_fails_invalid_expense_id() {     
+    async fn expense_entry_post_fails_invalid_expense_id() {
         // needs DB
     }*/
 
@@ -330,64 +408,64 @@ mod tests {
         let cost_bearer_uuid = Uuid::new_v4();
         let invalid_expense_type_json = format!(
             r#"{{"cost_shares":[{{"cost_bearer_id": "{}", "amount": 12.5}}], "expense_type": "{}", "description": "Some description"}}"#,
-            cost_bearer_uuid,
-            expense_uuid    
+            cost_bearer_uuid, expense_uuid
         );
         let response = arrange_and_act_post_request(invalid_expense_type_json).await;
 
         assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to receive body from response.");
         let error_message = String::from_utf8(body.to_vec()).unwrap();
         assert_eq!(error_message, "Json without valid expense id.");
-
     }
 
     #[tokio::test]
-    async fn expense_entry_post_fails_invalid_description() {     
+    async fn expense_entry_post_fails_invalid_description() {
         let expense_uuid = Uuid::new_v4();
         let cost_bearer_uuid = Uuid::new_v4();
         let invalid_description_json = format!(
             r#"{{"cost_shares":[{{"cost_bearer_id": "{}", "amount": 12.5}}], "expense_type": "{}", "description": ""}}"#,
-            cost_bearer_uuid.clone(), 
+            cost_bearer_uuid.clone(),
             expense_uuid.clone()
-        );        
+        );
         let response = arrange_and_act_post_request(invalid_description_json).await;
 
         assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
-        let body: axum::body::Bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to recieve body from response.");
+        let body: axum::body::Bytes = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to recieve body from response.");
         let error_message = String::from_utf8(body.to_vec()).unwrap();
         assert_eq!(error_message, "Json without valid description.");
 
         let whitespace_description_json = format!(
             r#"{{"cost_shares":[{{"cost_bearer_id": "{}", "amount": 12.5}}], "expense_type": "{}", "description": "   \t  "}}"#,
-            cost_bearer_uuid, 
-            expense_uuid
+            cost_bearer_uuid, expense_uuid
         );
         let response = arrange_and_act_post_request(whitespace_description_json).await;
 
         assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
-        let body: axum::body::Bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to recieve body from response.");
+        let body: axum::body::Bytes = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to recieve body from response.");
         let error_message = String::from_utf8(body.to_vec()).unwrap();
         assert_eq!(error_message, "Json without valid description.");
     }
 
+    #[tokio::test]
+    async fn expense_entry_update() {}
 
     #[tokio::test]
-    async fn expense_entry_update() {
+    async fn expense_entry_update_fails() {}
 
-    }
-
-    #[tokio::test]
-    async fn expense_entry_update_fails() {
-
-    }
-    
     #[tokio::test]
     async fn expense_entry_delete() {
         let response = arrange_and_act_delete_request(&String::from(TEST_VALID_UUID)).await;
 
         assert_eq!(response.status(), StatusCode::NO_CONTENT);
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to recieve body from response.");
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to recieve body from response.");
         assert!(body.is_empty());
 
         // still todo: verify that the deletion actually took place in the DB
@@ -398,7 +476,9 @@ mod tests {
         let response = arrange_and_act_delete_request(&String::from(TEST_INVALID_UUID)).await;
 
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
-        let body: axum::body::Bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to recieve body from response.");
+        let body: axum::body::Bytes = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to recieve body from response.");
         let error_message = String::from_utf8(body.to_vec()).unwrap();
         assert_eq!(error_message, "Expense entry not found.");
     }

@@ -18,12 +18,18 @@ impl TryFrom<ExpenseTypeNew> for ExpenseType {
 impl From<ExpenseTypeValidationError> for ApplicationError {
     fn from(err: ExpenseTypeValidationError) -> Self {
         match err {
-            ExpenseTypeValidationError::MissingName =>
-                ApplicationError { error_type: ApplicationErrorType::ValidationFailed, message: "Json without valid name.".to_string() },
-            ExpenseTypeValidationError::MissingDescription =>
-                ApplicationError { error_type: ApplicationErrorType::ValidationFailed, message: "Json without valid description.".to_string() },
-            ExpenseTypeValidationError::DuplicateName =>
-                ApplicationError { error_type: ApplicationErrorType::ValidationFailed, message: "Expense type with this name already exists.".to_string() },
+            ExpenseTypeValidationError::MissingName => ApplicationError {
+                error_type: ApplicationErrorType::ValidationFailed,
+                message: "Json without valid name.".to_string(),
+            },
+            ExpenseTypeValidationError::MissingDescription => ApplicationError {
+                error_type: ApplicationErrorType::ValidationFailed,
+                message: "Json without valid description.".to_string(),
+            },
+            ExpenseTypeValidationError::DuplicateName => ApplicationError {
+                error_type: ApplicationErrorType::ValidationFailed,
+                message: "Expense type with this name already exists.".to_string(),
+            },
         }
     }
 }

@@ -1,6 +1,6 @@
-use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use thiserror::Error;
+use uuid::Uuid;
 
 #[derive(serde::Serialize)]
 #[cfg_attr(test, derive(serde::Deserialize))]
@@ -8,7 +8,7 @@ pub struct CostBearer {
     id: Uuid,
     name: String,
     exists_from: DateTime<Utc>,
-    exists_to: Option<DateTime<Utc>>
+    exists_to: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Error)]
@@ -21,8 +21,11 @@ pub enum CostBearerValidationError {
 }
 
 impl CostBearer {
-    pub fn new(name: String, exists_from: DateTime<Utc>, exists_to: impl Into<Option<DateTime<Utc>>>) -> Result<Self, CostBearerValidationError> {
-
+    pub fn new(
+        name: String,
+        exists_from: DateTime<Utc>,
+        exists_to: impl Into<Option<DateTime<Utc>>>,
+    ) -> Result<Self, CostBearerValidationError> {
         // validate that the name is no empty
         if name.trim().is_empty() {
             return Err(CostBearerValidationError::MissingName);
@@ -30,7 +33,9 @@ impl CostBearer {
 
         // verify that exists_to is not before exists_from
         let exists_to = exists_to.into();
-        if let Some(to) = exists_to && to <= exists_from {
+        if let Some(to) = exists_to
+            && to <= exists_from
+        {
             return Err(CostBearerValidationError::InvalidDate);
         }
 

@@ -1,19 +1,25 @@
-use axum::{extract::Path, http::StatusCode, Json};
+use axum::{Json, extract::Path, http::StatusCode};
 use uuid::Uuid;
 
 use crate::domain::expense_type::ExpenseType;
 use crate::service::application_error::ApplicationError;
 use crate::service::expense_type::ExpenseTypeNew;
 
-pub async fn expense_type_post(expense_type: Json<ExpenseTypeNew>) -> Result<Json<ExpenseType>, ApplicationError> {
+pub async fn expense_type_post(
+    expense_type: Json<ExpenseTypeNew>,
+) -> Result<Json<ExpenseType>, ApplicationError> {
     let new_expense_type_dto: ExpenseTypeNew = expense_type.0;
     let created_expense_type = crate::service::command::expense_type::create(new_expense_type_dto)?;
     Ok(Json(created_expense_type))
 }
 
-pub async fn expense_type_update(Path(id): Path<Uuid>, expense_type: Json<ExpenseTypeNew>) -> Result<Json<ExpenseType>, ApplicationError> {
+pub async fn expense_type_update(
+    Path(id): Path<Uuid>,
+    expense_type: Json<ExpenseTypeNew>,
+) -> Result<Json<ExpenseType>, ApplicationError> {
     let update_expense_type_dto: ExpenseTypeNew = expense_type.0;
-    let updated_expense_type = crate::service::command::expense_type::update(id, update_expense_type_dto)?;
+    let updated_expense_type =
+        crate::service::command::expense_type::update(id, update_expense_type_dto)?;
     Ok(Json(updated_expense_type))
 }
 
@@ -29,23 +35,30 @@ pub async fn expense_type_get(Path(id): Path<Uuid>) -> Result<Json<ExpenseType>,
 
 #[cfg(test)]
 mod tests {
-    use axum::{body::Body, http::{Method, Request, StatusCode}, response::Response};
+    use crate::service::expense_type::ExpenseTypeNew;
+    use crate::test_util::test_utility::{TEST_INVALID_UUID, TEST_VALID_UUID};
+    use axum::{
+        body::Body,
+        http::{Method, Request, StatusCode},
+        response::Response,
+    };
     use serde_json::json;
     use tower::ServiceExt;
-    use crate::test_util::test_utility::{TEST_VALID_UUID, TEST_INVALID_UUID};
-    use crate::service::expense_type::ExpenseTypeNew;
 
     async fn arrange_and_act_get_request(id: &str) -> Response<Body> {
         let app = crate::api::routes::setup_routing().await;
         let uri = format!("/expense_types/{}", id);
 
         let request = Request::builder()
-                                .method(Method::GET)
-                                .uri(&uri)
-                                .body(Body::empty())
-                                .expect("Failed to finalize request.");
+            .method(Method::GET)
+            .uri(&uri)
+            .body(Body::empty())
+            .expect("Failed to finalize request.");
 
-        let response = app.oneshot(request).await.expect("Failed to receive response.");
+        let response = app
+            .oneshot(request)
+            .await
+            .expect("Failed to receive response.");
 
         response
     }
@@ -54,15 +67,18 @@ mod tests {
         let app = crate::api::routes::setup_routing().await;
         let uri = "/expense_types";
         let body = Body::from(expense_type);
-        
-        let request = Request::builder()
-                                .method(Method::POST)
-                                .uri(uri)
-                                .header("content-type", "application/json")
-                                .body(body)
-                                .expect("Failed to finalize request.");
 
-        let response = app.oneshot(request).await.expect("Failed to receive response.");
+        let request = Request::builder()
+            .method(Method::POST)
+            .uri(uri)
+            .header("content-type", "application/json")
+            .body(body)
+            .expect("Failed to finalize request.");
+
+        let response = app
+            .oneshot(request)
+            .await
+            .expect("Failed to receive response.");
 
         response
     }
@@ -70,15 +86,18 @@ mod tests {
     async fn arrange_and_act_delete_request(id: &str) -> Response<Body> {
         let app = crate::api::routes::setup_routing().await;
         let uri = format!("/expense_types/{}", id);
-    
+
         let request = Request::builder()
-                                .method(Method::DELETE)
-                                .uri(&uri)
-                                .body(Body::empty())
-                                .expect("Failed to finalize request.");
-    
-        let response = app.oneshot(request).await.expect("Failed to receive response.");
-    
+            .method(Method::DELETE)
+            .uri(&uri)
+            .body(Body::empty())
+            .expect("Failed to finalize request.");
+
+        let response = app
+            .oneshot(request)
+            .await
+            .expect("Failed to receive response.");
+
         response
     }
 
@@ -87,10 +106,16 @@ mod tests {
         let response = arrange_and_act_get_request(&String::from(TEST_VALID_UUID)).await;
 
         assert_eq!(response.status(), StatusCode::OK);
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
-        let expense_type: crate::domain::expense_type::ExpenseType = serde_json::from_slice(&body).expect("Failed to parse response into ExpenseType struct."); 
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to receive body from response.");
+        let expense_type: crate::domain::expense_type::ExpenseType = serde_json::from_slice(&body)
+            .expect("Failed to parse response into ExpenseType struct.");
         assert_eq!(expense_type.name(), "Food");
-        assert_eq!(expense_type.description(), "Expenses related to food and dining");
+        assert_eq!(
+            expense_type.description(),
+            "Expenses related to food and dining"
+        );
         assert!(!expense_type.id().is_nil());
     }
 
@@ -99,7 +124,9 @@ mod tests {
         let response = arrange_and_act_get_request(&String::from(TEST_INVALID_UUID)).await;
 
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap();
         let error_message = String::from_utf8(body.to_vec()).unwrap();
         assert_eq!(error_message, "Expense type not found.");
     }
@@ -113,18 +140,24 @@ mod tests {
 
     #[tokio::test]
     async fn expense_type_post() {
-        let new_expense_type = ExpenseTypeNew{
+        let new_expense_type = ExpenseTypeNew {
             name: String::from("Transportation"),
-            description: String::from("Expenses related to transportation and travel")
+            description: String::from("Expenses related to transportation and travel"),
         };
         let response = arrange_and_act_post_request(json!(new_expense_type).to_string()).await;
 
         assert_eq!(response.status(), StatusCode::OK);
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
-        let expense_type: crate::domain::expense_type::ExpenseType = serde_json::from_slice(&body).expect("Failed to parse response into ExpenseType struct.");
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to receive body from response.");
+        let expense_type: crate::domain::expense_type::ExpenseType = serde_json::from_slice(&body)
+            .expect("Failed to parse response into ExpenseType struct.");
 
         assert_eq!(expense_type.name(), "Transportation");
-        assert_eq!(expense_type.description(), "Expenses related to transportation and travel");
+        assert_eq!(
+            expense_type.description(),
+            "Expenses related to transportation and travel"
+        );
         assert!(!expense_type.id().is_nil());
     }
 
@@ -134,9 +167,14 @@ mod tests {
         let response = arrange_and_act_post_request(invalid_json).await;
 
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to receive body from response.");
         let my_str = str::from_utf8(&body);
-        assert_eq!(my_str.unwrap(), "Failed to parse the request body as JSON: key must be a string at line 1 column 2");
+        assert_eq!(
+            my_str.unwrap(),
+            "Failed to parse the request body as JSON: key must be a string at line 1 column 2"
+        );
     }
 
     #[tokio::test]
@@ -145,7 +183,9 @@ mod tests {
         let response = arrange_and_act_post_request(empty_name_json.to_string()).await;
 
         assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to receive body from response.");
         let error_message = String::from_utf8(body.to_vec()).unwrap();
         assert_eq!(error_message, "Json without valid name.");
     }
@@ -156,7 +196,9 @@ mod tests {
         let response = arrange_and_act_post_request(whitespace_name_json.to_string()).await;
 
         assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to receive body from response.");
         let error_message = String::from_utf8(body.to_vec()).unwrap();
         assert_eq!(error_message, "Json without valid name.");
     }
@@ -167,7 +209,9 @@ mod tests {
         let response = arrange_and_act_post_request(empty_description_json.to_string()).await;
 
         assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to receive body from response.");
         let error_message = String::from_utf8(body.to_vec()).unwrap();
         assert_eq!(error_message, "Json without valid description.");
     }
@@ -178,7 +222,9 @@ mod tests {
         let response = arrange_and_act_post_request(whitespace_description_json.to_string()).await;
 
         assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to receive body from response.");
         let error_message = String::from_utf8(body.to_vec()).unwrap();
         assert_eq!(error_message, "Json without valid description.");
     }
@@ -223,7 +269,9 @@ mod tests {
         let response = arrange_and_act_delete_request(&String::from(TEST_VALID_UUID)).await;
 
         assert_eq!(response.status(), StatusCode::NO_CONTENT);
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to receive body from response.");
         assert!(body.is_empty());
 
         // still todo: verify that the deletion actually took place in the DB
@@ -234,7 +282,9 @@ mod tests {
         let response = arrange_and_act_delete_request(&String::from(TEST_INVALID_UUID)).await;
 
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
-        let body: axum::body::Bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("Failed to receive body from response.");
+        let body: axum::body::Bytes = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to receive body from response.");
         let error_message = String::from_utf8(body.to_vec()).unwrap();
         assert_eq!(error_message, "Expense type not found.");
     }

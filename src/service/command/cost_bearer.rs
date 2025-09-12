@@ -10,17 +10,20 @@ pub fn create(dto: CostBearerNew) -> Result<CostBearer, ApplicationError> {
     let cost_bearer = CostBearer::try_from(dto)?;
 
     // todo - save to DB
-    
+
     Ok(cost_bearer)
 }
 
-pub fn update(id: Uuid, dto: CostBearerNew) -> Result<CostBearer, ApplicationError>  {
+pub fn update(id: Uuid, dto: CostBearerNew) -> Result<CostBearer, ApplicationError> {
     todo!()
 }
 
 pub fn delete(id: Uuid) -> Result<(), ApplicationError> {
     match id {
         id if id == TEST_VALID_UUID => Ok(()),
-        _ => Err(ApplicationError { error_type: ApplicationErrorType::NotFound, message: String::from("Cost Bearer not found.") })
+        _ => Err(ApplicationError {
+            error_type: ApplicationErrorType::NotFound,
+            message: String::from("Cost Bearer not found."),
+        }),
     }
 }

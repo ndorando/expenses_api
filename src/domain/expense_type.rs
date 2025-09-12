@@ -1,5 +1,5 @@
-use uuid::Uuid;
 use thiserror::Error;
+use uuid::Uuid;
 
 // validated and guaranteed to be correct data
 #[derive(serde::Serialize)]
@@ -34,7 +34,9 @@ impl ExpenseType {
 
         // validate that the name is unique (database-dependent validation)
         if false {
-            todo!("Implementation of expense type name uniqueness validation must still happen once we have a DB.");
+            todo!(
+                "Implementation of expense type name uniqueness validation must still happen once we have a DB."
+            );
         }
 
         Ok(Self {
@@ -55,4 +57,4 @@ impl ExpenseType {
     pub fn description(&self) -> &str {
         &self.description
     }
-}      
+}

@@ -10,17 +10,20 @@ pub fn create(dto: ExpenseEntryNew) -> Result<ExpenseEntry, ApplicationError> {
     let expense_entry = ExpenseEntry::try_from(dto)?;
 
     // todo - save to DB
-    
+
     Ok(expense_entry)
 }
 
-pub fn update(id: Uuid, dto: ExpenseEntryNew) -> Result<ExpenseEntry, ApplicationError>  {
+pub fn update(id: Uuid, dto: ExpenseEntryNew) -> Result<ExpenseEntry, ApplicationError> {
     todo!()
 }
 
 pub fn delete(id: Uuid) -> Result<(), ApplicationError> {
     match id {
         id if id == TEST_VALID_UUID => Ok(()),
-        _ => Err(ApplicationError { error_type: ApplicationErrorType::NotFound, message: String::from("Expense entry not found.") })
+        _ => Err(ApplicationError {
+            error_type: ApplicationErrorType::NotFound,
+            message: String::from("Expense entry not found."),
+        }),
     }
 }

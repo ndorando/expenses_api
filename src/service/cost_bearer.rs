@@ -8,8 +8,8 @@ use crate::service::application_error::{ApplicationError, ApplicationErrorType};
 pub struct CostBearerNew {
     pub name: String,
     pub exists_from: DateTime<Utc>,
-    pub exists_to: Option<DateTime<Utc>>
-} 
+    pub exists_to: Option<DateTime<Utc>>,
+}
 
 impl TryFrom<CostBearerNew> for CostBearer {
     type Error = CostBearerValidationError;
@@ -21,10 +21,14 @@ impl TryFrom<CostBearerNew> for CostBearer {
 impl From<CostBearerValidationError> for ApplicationError {
     fn from(err: CostBearerValidationError) -> Self {
         match err {
-            CostBearerValidationError::MissingName =>
-                ApplicationError { error_type: ApplicationErrorType::ValidationFailed, message: "Json without valid name.".to_string() },
-            CostBearerValidationError::InvalidDate =>
-                ApplicationError { error_type: ApplicationErrorType::ValidationFailed, message: "Json without valid date.".to_string() },
+            CostBearerValidationError::MissingName => ApplicationError {
+                error_type: ApplicationErrorType::ValidationFailed,
+                message: "Json without valid name.".to_string(),
+            },
+            CostBearerValidationError::InvalidDate => ApplicationError {
+                error_type: ApplicationErrorType::ValidationFailed,
+                message: "Json without valid date.".to_string(),
+            },
         }
     }
 }

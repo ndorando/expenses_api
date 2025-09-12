@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
-use uuid::Uuid;
 use thiserror::Error;
+use uuid::Uuid;
 
 use crate::domain::cost_share::CostShare;
 
@@ -13,11 +13,11 @@ pub struct ExpenseEntry {
     cost_shares: Vec<CostShare>,
     expense_type: Uuid,
     description: String,
-}       
+}
 
 #[derive(Debug, Error)]
 pub enum ExpenseEntryValidationError {
-     #[error("Expense Entry Validation failed: No cost shares provided.")]
+    #[error("Expense Entry Validation failed: No cost shares provided.")]
     MissingCostShares,
 
     #[error("Expense Entry Validation failed: Cost shares malformed.")]
@@ -40,25 +40,33 @@ pub enum ExpenseEntryValidationError {
 }
 
 impl ExpenseEntry {
-    pub fn new(cost_shares: Vec<CostShare>, expense_type: Uuid, description: String, expense_date: impl Into<Option<DateTime<Utc>>>) -> Result<Self, ExpenseEntryValidationError> {
-
+    pub fn new(
+        cost_shares: Vec<CostShare>,
+        expense_type: Uuid,
+        description: String,
+        expense_date: impl Into<Option<DateTime<Utc>>>,
+    ) -> Result<Self, ExpenseEntryValidationError> {
         // validate cost shares
         if cost_shares.is_empty() {
             return Err(ExpenseEntryValidationError::MissingCostShares);
         }
-    
+
         let mut seen = std::collections::HashSet::new();
         for share in &cost_shares {
             // check for duplicate cost bearer ids
             if !seen.insert(share.cost_bearer_id) {
-                return Err(ExpenseEntryValidationError::DuplicateCostBearerIds(share.cost_bearer_id));
+                return Err(ExpenseEntryValidationError::DuplicateCostBearerIds(
+                    share.cost_bearer_id,
+                ));
             }
             // check for it never being 0.0
             if share.amount == 0.0f64 || share.cost_bearer_id.is_nil() {
                 return Err(ExpenseEntryValidationError::MalformedCostShares);
             }
             if false {
-                todo!("Implementation of cost share validation for ExpenseEntry must still happen once we have a DB.");
+                todo!(
+                    "Implementation of cost share validation for ExpenseEntry must still happen once we have a DB."
+                );
             }
         }
 
@@ -68,7 +76,9 @@ impl ExpenseEntry {
         }
 
         if false {
-            todo!("Implementation of expense type validation for ExpenseEntry must still happen once we have a DB.");
+            todo!(
+                "Implementation of expense type validation for ExpenseEntry must still happen once we have a DB."
+            );
         }
 
         // validate description
