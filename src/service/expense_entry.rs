@@ -77,7 +77,7 @@ impl ExpenseEntryService {
     }
 }
 
-pub trait ExpenseEntryReadPort: {
+pub trait ExpenseEntryReadPort {
     fn get(&self, id: Uuid) -> Result<ExpenseEntry, ApplicationError>;
 }
 
