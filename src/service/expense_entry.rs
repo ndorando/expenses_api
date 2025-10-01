@@ -31,15 +31,15 @@ impl TryFrom<ExpenseEntryNew> for ExpenseEntry {
 impl From<ExpenseEntryValidationError> for ApplicationError {
     fn from(err: ExpenseEntryValidationError) -> Self {
         match err {
-            ExpenseEntryValidationError::DuplicateCostBearerIds(Uuid) => ApplicationError {
+            ExpenseEntryValidationError::DuplicateCostBearerIds(uuid) => ApplicationError {
                 error_type: ApplicationErrorType::ValidationFailed,
                 message: "Json without valid cost shares.".to_string(),
             },
-            ExpenseEntryValidationError::InvalidCostBearerId(Uuid) => ApplicationError {
+            ExpenseEntryValidationError::InvalidCostBearerId(uuid) => ApplicationError {
                 error_type: ApplicationErrorType::ValidationFailed,
                 message: "Json without valid cost shares.".to_string(),
             },
-            ExpenseEntryValidationError::InvalidExpenseTypeId(Uuid) => ApplicationError {
+            ExpenseEntryValidationError::InvalidExpenseTypeId(uuid) => ApplicationError {
                 error_type: ApplicationErrorType::ValidationFailed,
                 message: "Json without valid expense id.".to_string(),
             },
