@@ -35,8 +35,14 @@ pub async fn expense_type_get(Path(id): Path<Uuid>) -> Result<Json<ExpenseType>,
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
+    use crate::api::routes::Services;
+    use crate::repository::sqliterepository::expense_entry::ExpenseEntryReadSqliteRepositry;
+    use crate::service::expense_entry::ExpenseEntryService;
     use crate::service::expense_type::ExpenseTypeNew;
     use crate::test_util::test_utility::{TEST_INVALID_UUID, TEST_VALID_UUID};
+    use axum::Router;
     use axum::{
         body::Body,
         http::{Method, Request, StatusCode},
@@ -45,8 +51,16 @@ mod tests {
     use serde_json::json;
     use tower::ServiceExt;
 
+    async fn setup_test_app() -> Router {
+        let read_repo = Arc::new(ExpenseEntryReadSqliteRepositry::new());
+        let expense_entry_service = Arc::new(ExpenseEntryService::new(read_repo));
+        let services = Services { expense_entry_service: expense_entry_service.clone() };
+
+        crate::api::routes::setup_routing().await.with_state(services)
+    }
+
     async fn arrange_and_act_get_request(id: &str) -> Response<Body> {
-        let app = crate::api::routes::setup_routing().await;
+        let app = setup_test_app().await;
         let uri = format!("/expense_types/{}", id);
 
         let request = Request::builder()
@@ -64,7 +78,7 @@ mod tests {
     }
 
     async fn arrange_and_act_post_request(expense_type: String) -> Response<Body> {
-        let app = crate::api::routes::setup_routing().await;
+        let app = setup_test_app().await;
         let uri = "/expense_types";
         let body = Body::from(expense_type);
 
@@ -84,7 +98,7 @@ mod tests {
     }
 
     async fn arrange_and_act_delete_request(id: &str) -> Response<Body> {
-        let app = crate::api::routes::setup_routing().await;
+        let app = setup_test_app().await;
         let uri = format!("/expense_types/{}", id);
 
         let request = Request::builder()

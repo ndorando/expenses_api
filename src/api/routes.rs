@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::http::{StatusCode, Uri};
 use axum::response::{IntoResponse, Response};
 use axum::{Router, routing::get, routing::post};
@@ -11,8 +13,14 @@ use crate::api::expense_entry::{
 use crate::api::expense_type::{
     expense_type_delete, expense_type_get, expense_type_post, expense_type_update,
 };
+use crate::service::expense_entry::ExpenseEntryService;
 
-pub async fn setup_routing() -> Router {
+#[derive(Clone)]
+pub struct Services {
+    pub expense_entry_service: Arc<ExpenseEntryService>,
+}
+
+pub async fn setup_routing() -> Router<Services> {
     Router::new()
         .merge(route_expense_entry())
         .merge(route_cost_bearer())
@@ -28,7 +36,7 @@ async fn handle_routing_error(uri: Uri) -> Response {
         .into_response()
 }
 
-fn route_expense_entry() -> Router {
+fn route_expense_entry() -> Router<Services> {
     Router::new()
         .route(
             "/expense_entries/{id}",
@@ -39,7 +47,7 @@ fn route_expense_entry() -> Router {
         .route("/expense_entries", post(expense_entry_post))
 }
 
-fn route_cost_bearer() -> Router {
+fn route_cost_bearer() -> Router<Services> {
     Router::new()
         .route(
             "/cost_bearers/{id}",
@@ -50,7 +58,7 @@ fn route_cost_bearer() -> Router {
         .route("/cost_bearers", post(cost_bearer_post))
 }
 
-fn route_expense_type() -> Router {
+fn route_expense_type() -> Router<Services> {
     Router::new()
         .route(
             "/expense_types/{id}",

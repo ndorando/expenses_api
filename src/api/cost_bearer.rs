@@ -34,18 +34,28 @@ pub async fn cost_bearer_get(Path(id): Path<Uuid>) -> Result<Json<CostBearer>, A
 
 #[cfg(test)]
 mod tests {
-    use crate::test_util::test_utility::{TEST_INVALID_UUID, TEST_VALID_UUID};
+    use std::sync::Arc;
+
+    use crate::{api::routes::Services, repository::sqliterepository::expense_entry::ExpenseEntryReadSqliteRepositry, service::expense_entry::ExpenseEntryService, test_util::test_utility::{TEST_INVALID_UUID, TEST_VALID_UUID}};
     use axum::{
         body::Body,
         http::{Method, Request, StatusCode},
-        response::Response,
+        response::Response, Router,
     };
     use chrono::{TimeZone, Utc};
     use serde_json::json;
     use tower::ServiceExt;
 
+    async fn setup_test_app() -> Router {
+        let read_repo = Arc::new(ExpenseEntryReadSqliteRepositry::new());
+        let expense_entry_service = Arc::new(ExpenseEntryService::new(read_repo));
+        let services = Services { expense_entry_service: expense_entry_service.clone() };
+
+        crate::api::routes::setup_routing().await.with_state(services)
+    }
+
     async fn arrange_and_act_get_request(id: &str) -> Response<Body> {
-        let app = crate::api::routes::setup_routing().await;
+        let app = setup_test_app().await;
         let uri = format!("/cost_bearers/{}", id);
 
         let request = Request::builder()
@@ -63,7 +73,7 @@ mod tests {
     }
 
     async fn arrange_and_act_post_request(entry: String) -> Response<Body> {
-        let app = crate::api::routes::setup_routing().await;
+        let app = setup_test_app().await;
         let uri = "/cost_bearers";
         let body = Body::from(entry);
 
@@ -83,7 +93,7 @@ mod tests {
     }
 
     async fn arrange_and_act_delete_request(id: &str) -> Response<Body> {
-        let app = crate::api::routes::setup_routing().await;
+        let app = setup_test_app().await;
         let uri = format!("/cost_bearers/{}", id);
 
         let request = Request::builder()

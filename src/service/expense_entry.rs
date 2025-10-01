@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
@@ -60,3 +62,27 @@ impl From<ExpenseEntryValidationError> for ApplicationError {
         }
     }
 }
+
+
+#[derive(Clone)]
+pub struct ExpenseEntryService {
+    pub read_repo: Arc<dyn ExpenseEntryReadPort + Send + Sync>,
+}
+
+impl ExpenseEntryService {
+    pub fn new(read_repo: Arc<dyn ExpenseEntryReadPort + Send + Sync>) -> Self {
+        ExpenseEntryService { 
+            read_repo 
+        }
+    }
+}
+
+pub trait ExpenseEntryReadPort: {
+    fn get(&self, id: Uuid) -> Result<ExpenseEntry, ApplicationError>;
+}
+
+/*pub trait ExpenseEntryWritePort {
+    pub fn insert();
+    pub fn update();
+    pub fn delete();
+}*/
