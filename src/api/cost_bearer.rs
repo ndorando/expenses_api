@@ -36,11 +36,17 @@ pub async fn cost_bearer_get(Path(id): Path<Uuid>) -> Result<Json<CostBearer>, A
 mod tests {
     use std::sync::Arc;
 
-    use crate::{api::routes::Services, repository::sqliterepository::expense_entry::ExpenseEntryReadSqliteRepositry, service::expense_entry::ExpenseEntryService, test_util::test_utility::{TEST_INVALID_UUID, TEST_VALID_UUID}};
+    use crate::{
+        api::routes::Services,
+        repository::sqliterepository::expense_entry::ExpenseEntryReadSqliteRepositry,
+        service::expense_entry::ExpenseEntryService,
+        test_util::test_utility::{TEST_INVALID_UUID, TEST_VALID_UUID},
+    };
     use axum::{
+        Router,
         body::Body,
         http::{Method, Request, StatusCode},
-        response::Response, Router,
+        response::Response,
     };
     use chrono::{TimeZone, Utc};
     use serde_json::json;
@@ -49,9 +55,13 @@ mod tests {
     async fn setup_test_app() -> Router {
         let read_repo = Arc::new(ExpenseEntryReadSqliteRepositry::new());
         let expense_entry_service = Arc::new(ExpenseEntryService::new(read_repo));
-        let services = Services { expense_entry_service: expense_entry_service.clone() };
+        let services = Services {
+            expense_entry_service: expense_entry_service.clone(),
+        };
 
-        crate::api::routes::setup_routing().await.with_state(services)
+        crate::api::routes::setup_routing()
+            .await
+            .with_state(services)
     }
 
     async fn arrange_and_act_get_request(id: &str) -> Response<Body> {

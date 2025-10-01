@@ -41,14 +41,19 @@ pub async fn expense_entry_get(
 mod tests {
     use std::sync::Arc;
 
-    use crate::{domain::cost_share::CostShare, repository::sqliterepository::expense_entry::ExpenseEntryReadSqliteRepositry, service::expense_entry::ExpenseEntryService};
+    use crate::{
+        domain::cost_share::CostShare,
+        repository::sqliterepository::expense_entry::ExpenseEntryReadSqliteRepositry,
+        service::expense_entry::ExpenseEntryService,
+    };
 
     use super::*;
     use crate::test_util::test_utility::{TEST_INVALID_UUID, TEST_VALID_UUID};
     use axum::{
+        Router,
         body::Body,
         http::{Method, Request, StatusCode},
-        response::Response, Router,
+        response::Response,
     };
     use chrono::TimeZone;
     use serde_json::json;
@@ -57,9 +62,13 @@ mod tests {
     async fn setup_test_app() -> Router {
         let read_repo = Arc::new(ExpenseEntryReadSqliteRepositry::new());
         let expense_entry_service = Arc::new(ExpenseEntryService::new(read_repo));
-        let services = Services { expense_entry_service: expense_entry_service.clone() };
+        let services = Services {
+            expense_entry_service: expense_entry_service.clone(),
+        };
 
-        crate::api::routes::setup_routing().await.with_state(services)
+        crate::api::routes::setup_routing()
+            .await
+            .with_state(services)
     }
 
     async fn arrange_and_act_get_request(id: &str) -> Response<Body> {

@@ -54,9 +54,13 @@ mod tests {
     async fn setup_test_app() -> Router {
         let read_repo = Arc::new(ExpenseEntryReadSqliteRepositry::new());
         let expense_entry_service = Arc::new(ExpenseEntryService::new(read_repo));
-        let services = Services { expense_entry_service: expense_entry_service.clone() };
+        let services = Services {
+            expense_entry_service: expense_entry_service.clone(),
+        };
 
-        crate::api::routes::setup_routing().await.with_state(services)
+        crate::api::routes::setup_routing()
+            .await
+            .with_state(services)
     }
 
     async fn arrange_and_act_get_request(id: &str) -> Response<Body> {

@@ -4,6 +4,4 @@ pub enum RepositoryErrorType {
     // this can be extended
 }
 
-pub struct RepositoryError {
-    
-}
+pub struct RepositoryError {}

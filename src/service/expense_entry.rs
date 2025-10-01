@@ -63,7 +63,6 @@ impl From<ExpenseEntryValidationError> for ApplicationError {
     }
 }
 
-
 #[derive(Clone)]
 pub struct ExpenseEntryService {
     pub read_repo: Arc<dyn ExpenseEntryReadPort + Send + Sync>,
@@ -71,9 +70,7 @@ pub struct ExpenseEntryService {
 
 impl ExpenseEntryService {
     pub fn new(read_repo: Arc<dyn ExpenseEntryReadPort + Send + Sync>) -> Self {
-        ExpenseEntryService { 
-            read_repo 
-        }
+        ExpenseEntryService { read_repo }
     }
 }
 
