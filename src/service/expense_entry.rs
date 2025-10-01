@@ -86,7 +86,7 @@ pub trait ExpenseEntryReadPort {
 }
 
 pub trait ExpenseEntryWritePort {
-    fn insert(&self, entry: ExpenseEntry);
-    fn update(&self, id: Uuid, entry: ExpenseEntry);
-    fn delete(&self, id: Uuid);
+    fn insert(&self, entry: ExpenseEntry) -> Result<ExpenseEntry, ApplicationError>;
+    fn update(&self, id: Uuid, entry: ExpenseEntry) -> Result<ExpenseEntry, ApplicationError>;
+    fn delete(&self, id: Uuid) -> Result<(), ApplicationError>;
 }

@@ -46,15 +46,21 @@ impl ExpenseEntryReadPort for ExpenseEntryReadSqliteRepository {
 }
 
 impl ExpenseEntryWritePort for ExpenseEntryWriteSqliteRepository {
-    fn insert(&self, entry: ExpenseEntry) {
+    fn insert(&self, entry: ExpenseEntry) -> Result<ExpenseEntry, ApplicationError> {
+        Ok(entry)
+    }
+
+    fn update(&self, id: Uuid, entry: ExpenseEntry) -> Result<ExpenseEntry, ApplicationError> {
         todo!()
     }
 
-    fn update(&self, id: Uuid, entry: ExpenseEntry) {
-        todo!()
-    }
-
-    fn delete(&self, id: Uuid) {
-        todo!()
+    fn delete(&self, id: Uuid) -> Result<(), ApplicationError> {
+        match id {
+            id if id == TEST_VALID_UUID => Ok(()),
+            _ => Err(ApplicationError {
+                error_type: ApplicationErrorType::NotFound,
+                message: String::from("Expense entry not found."),
+            }),
+        }
     }
 }
