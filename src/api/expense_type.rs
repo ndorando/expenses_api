@@ -38,7 +38,9 @@ mod tests {
     use std::sync::Arc;
 
     use crate::api::routes::Services;
-    use crate::repository::sqliterepository::expense_entry::ExpenseEntryReadSqliteRepositry;
+    use crate::repository::sqliterepository::expense_entry::{
+        ExpenseEntryReadSqliteRepository, ExpenseEntryWriteSqliteRepository,
+    };
     use crate::service::expense_entry::ExpenseEntryService;
     use crate::service::expense_type::ExpenseTypeNew;
     use crate::test_util::test_utility::{TEST_INVALID_UUID, TEST_VALID_UUID};
@@ -52,8 +54,9 @@ mod tests {
     use tower::ServiceExt;
 
     async fn setup_test_app() -> Router {
-        let read_repo = Arc::new(ExpenseEntryReadSqliteRepositry::new());
-        let expense_entry_service = Arc::new(ExpenseEntryService::new(read_repo));
+        let read_repo = Arc::new(ExpenseEntryReadSqliteRepository::new());
+        let write_repo = Arc::new(ExpenseEntryWriteSqliteRepository::new());
+        let expense_entry_service = Arc::new(ExpenseEntryService::new(read_repo, write_repo));
         let services = Services {
             expense_entry_service: expense_entry_service.clone(),
         };

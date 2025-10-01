@@ -65,12 +65,19 @@ impl From<ExpenseEntryValidationError> for ApplicationError {
 
 #[derive(Clone)]
 pub struct ExpenseEntryService {
-    pub read_repo: Arc<dyn ExpenseEntryReadPort + Send + Sync>,
+    pub(in crate::service) read_repo: Arc<dyn ExpenseEntryReadPort + Send + Sync>,
+    pub(in crate::service) write_repo: Arc<dyn ExpenseEntryWritePort + Send + Sync>,
 }
 
 impl ExpenseEntryService {
-    pub fn new(read_repo: Arc<dyn ExpenseEntryReadPort + Send + Sync>) -> Self {
-        ExpenseEntryService { read_repo }
+    pub fn new(
+        read_repo: Arc<dyn ExpenseEntryReadPort + Send + Sync>,
+        write_repo: Arc<dyn ExpenseEntryWritePort + Send + Sync>,
+    ) -> Self {
+        ExpenseEntryService {
+            read_repo,
+            write_repo,
+        }
     }
 }
 
@@ -78,8 +85,8 @@ pub trait ExpenseEntryReadPort {
     fn get(&self, id: Uuid) -> Result<ExpenseEntry, ApplicationError>;
 }
 
-/*pub trait ExpenseEntryWritePort {
-    pub fn insert();
-    pub fn update();
-    pub fn delete();
-}*/
+pub trait ExpenseEntryWritePort {
+    fn insert(&self, entry: ExpenseEntry);
+    fn update(&self, id: Uuid, entry: ExpenseEntry);
+    fn delete(&self, id: Uuid);
+}

@@ -4,20 +4,27 @@ use crate::{
     domain::{cost_share::CostShare, expense_entry::ExpenseEntry},
     service::{
         application_error::{ApplicationError, ApplicationErrorType},
-        expense_entry::ExpenseEntryReadPort,
+        expense_entry::{ExpenseEntryReadPort, ExpenseEntryWritePort},
     },
     test_util::test_utility::TEST_VALID_UUID,
 };
 
-pub struct ExpenseEntryReadSqliteRepositry {}
+pub struct ExpenseEntryReadSqliteRepository {}
+pub struct ExpenseEntryWriteSqliteRepository {}
 
-impl ExpenseEntryReadSqliteRepositry {
+impl ExpenseEntryReadSqliteRepository {
     pub fn new() -> Self {
-        ExpenseEntryReadSqliteRepositry {}
+        ExpenseEntryReadSqliteRepository {}
     }
 }
 
-impl ExpenseEntryReadPort for ExpenseEntryReadSqliteRepositry {
+impl ExpenseEntryWriteSqliteRepository {
+    pub fn new() -> Self {
+        ExpenseEntryWriteSqliteRepository {}
+    }
+}
+
+impl ExpenseEntryReadPort for ExpenseEntryReadSqliteRepository {
     fn get(&self, id: Uuid) -> Result<ExpenseEntry, ApplicationError> {
         match id {
             id if id == TEST_VALID_UUID => Ok(ExpenseEntry::new(
@@ -35,5 +42,19 @@ impl ExpenseEntryReadPort for ExpenseEntryReadSqliteRepositry {
                 message: String::from("Expense entry not found."),
             }),
         }
+    }
+}
+
+impl ExpenseEntryWritePort for ExpenseEntryWriteSqliteRepository {
+    fn insert(&self, entry: ExpenseEntry) {
+        todo!()
+    }
+
+    fn update(&self, id: Uuid, entry: ExpenseEntry) {
+        todo!()
+    }
+
+    fn delete(&self, id: Uuid) {
+        todo!()
     }
 }

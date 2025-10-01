@@ -9,14 +9,17 @@ pub mod test_util;
 use std::sync::Arc;
 
 use api::routes::setup_routing;
-use repository::sqliterepository::expense_entry::ExpenseEntryReadSqliteRepositry;
+use repository::sqliterepository::expense_entry::{
+    ExpenseEntryReadSqliteRepository, ExpenseEntryWriteSqliteRepository,
+};
 
 use crate::{api::routes::Services, service::expense_entry::ExpenseEntryService};
 
 #[tokio::main]
 async fn main() {
-    let read_repo = Arc::new(ExpenseEntryReadSqliteRepositry::new());
-    let expense_entry_service = Arc::new(ExpenseEntryService::new(read_repo));
+    let read_repo = Arc::new(ExpenseEntryReadSqliteRepository::new());
+    let write_repo = Arc::new(ExpenseEntryWriteSqliteRepository::new());
+    let expense_entry_service = Arc::new(ExpenseEntryService::new(read_repo, write_repo));
     let services = Services {
         expense_entry_service: expense_entry_service.clone(),
     };

@@ -8,24 +8,31 @@ use crate::service::application_error::ApplicationError;
 use crate::service::expense_entry::ExpenseEntryNew;
 
 pub async fn expense_entry_post(
+    State(services): State<Services>,
     entry: Json<ExpenseEntryNew>,
 ) -> Result<Json<ExpenseEntry>, ApplicationError> {
     let new_entry_dto: ExpenseEntryNew = entry.0;
-    let created_entry = crate::service::command::expense_entry::create(new_entry_dto)?;
+    let created_entry = services.expense_entry_service.create(new_entry_dto)?;
     Ok(Json(created_entry))
 }
 
 pub async fn expense_entry_update(
+    State(services): State<Services>,
     Path(id): Path<Uuid>,
     entry: Json<ExpenseEntryNew>,
 ) -> Result<Json<ExpenseEntry>, ApplicationError> {
     let update_entry_dto: ExpenseEntryNew = entry.0;
-    let updated_entry = crate::service::command::expense_entry::update(id, update_entry_dto)?;
+    let updated_entry = services
+        .expense_entry_service
+        .update(id, update_entry_dto)?;
     Ok(Json(updated_entry))
 }
 
-pub async fn expense_entry_delete(Path(id): Path<Uuid>) -> Result<StatusCode, ApplicationError> {
-    crate::service::command::expense_entry::delete(id)?;
+pub async fn expense_entry_delete(
+    State(services): State<Services>,
+    Path(id): Path<Uuid>,
+) -> Result<StatusCode, ApplicationError> {
+    services.expense_entry_service.delete(id)?;
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -43,7 +50,9 @@ mod tests {
 
     use crate::{
         domain::cost_share::CostShare,
-        repository::sqliterepository::expense_entry::ExpenseEntryReadSqliteRepositry,
+        repository::sqliterepository::expense_entry::{
+            ExpenseEntryReadSqliteRepository, ExpenseEntryWriteSqliteRepository,
+        },
         service::expense_entry::ExpenseEntryService,
     };
 
@@ -60,8 +69,9 @@ mod tests {
     use tower::ServiceExt;
 
     async fn setup_test_app() -> Router {
-        let read_repo = Arc::new(ExpenseEntryReadSqliteRepositry::new());
-        let expense_entry_service = Arc::new(ExpenseEntryService::new(read_repo));
+        let read_repo = Arc::new(ExpenseEntryReadSqliteRepository::new());
+        let write_repo = Arc::new(ExpenseEntryWriteSqliteRepository::new());
+        let expense_entry_service = Arc::new(ExpenseEntryService::new(read_repo, write_repo));
         let services = Services {
             expense_entry_service: expense_entry_service.clone(),
         };
