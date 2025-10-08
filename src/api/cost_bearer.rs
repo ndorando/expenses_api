@@ -1,34 +1,44 @@
 use axum::{Json, extract::Path, http::StatusCode};
 use uuid::Uuid;
 
+use crate::api::routes::Services;
 use crate::domain::cost_bearer::CostBearer;
 use crate::service::application_error::ApplicationError;
 use crate::service::cost_bearer::CostBearerNew;
+use axum::extract::State;
 
 pub async fn cost_bearer_post(
+    State(services): State<Services>,
     entry: Json<CostBearerNew>,
 ) -> Result<Json<CostBearer>, ApplicationError> {
     let new_entry_dto: CostBearerNew = entry.0;
-    let created_entry = crate::service::command::cost_bearer::create(new_entry_dto)?;
+    let created_entry = services.cost_bearer_service.create(new_entry_dto)?;
     Ok(Json(created_entry))
 }
 
 pub async fn cost_bearer_update(
+    State(services): State<Services>,
     Path(id): Path<Uuid>,
     entry: Json<CostBearerNew>,
 ) -> Result<Json<CostBearer>, ApplicationError> {
     let update_entry_dto: CostBearerNew = entry.0;
-    let updated_entry = crate::service::command::cost_bearer::update(id, update_entry_dto)?;
+    let updated_entry = services.cost_bearer_service.update(id, update_entry_dto)?;
     Ok(Json(updated_entry))
 }
 
-pub async fn cost_bearer_delete(Path(id): Path<Uuid>) -> Result<StatusCode, ApplicationError> {
-    crate::service::command::cost_bearer::delete(id)?;
+pub async fn cost_bearer_delete(
+    State(services): State<Services>,
+    Path(id): Path<Uuid>,
+) -> Result<StatusCode, ApplicationError> {
+    services.cost_bearer_service.delete(id)?;
     Ok(StatusCode::NO_CONTENT)
 }
 
-pub async fn cost_bearer_get(Path(id): Path<Uuid>) -> Result<Json<CostBearer>, ApplicationError> {
-    let found_entry = crate::service::query::cost_bearer::get(id)?;
+pub async fn cost_bearer_get(
+    State(services): State<Services>,
+    Path(id): Path<Uuid>,
+) -> Result<Json<CostBearer>, ApplicationError> {
+    let found_entry = services.cost_bearer_service.get(id)?;
     Ok(Json(found_entry))
 }
 
@@ -38,10 +48,11 @@ mod tests {
 
     use crate::{
         api::routes::Services,
-        repository::sqliterepository::expense_entry::{
-            ExpenseEntryReadSqliteRepository, ExpenseEntryWriteSqliteRepository,
+        repository::sqliterepository::{
+            cost_bearer::{CostBearerReadSqliteRepository, CostBearerWriteSqliteRepository},
+            expense_entry::{ExpenseEntryReadSqliteRepository, ExpenseEntryWriteSqliteRepository},
         },
-        service::expense_entry::ExpenseEntryService,
+        service::{cost_bearer::CostBearerService, expense_entry::ExpenseEntryService},
         test_util::test_utility::{TEST_INVALID_UUID, TEST_VALID_UUID},
     };
     use axum::{
@@ -55,11 +66,23 @@ mod tests {
     use tower::ServiceExt;
 
     async fn setup_test_app() -> Router {
-        let read_repo = Arc::new(ExpenseEntryReadSqliteRepository::new());
-        let write_repo = Arc::new(ExpenseEntryWriteSqliteRepository::new());
-        let expense_entry_service = Arc::new(ExpenseEntryService::new(read_repo, write_repo));
+        let expense_entry_read_repo = Arc::new(ExpenseEntryReadSqliteRepository::new());
+        let expense_entry_write_repo = Arc::new(ExpenseEntryWriteSqliteRepository::new());
+        let expense_entry_service = Arc::new(ExpenseEntryService::new(
+            expense_entry_read_repo,
+            expense_entry_write_repo,
+        ));
+
+        let cost_bearer_read_repo = Arc::new(CostBearerReadSqliteRepository::new());
+        let cost_bearer_write_repo = Arc::new(CostBearerWriteSqliteRepository::new());
+        let cost_bearer_service = Arc::new(CostBearerService::new(
+            cost_bearer_read_repo,
+            cost_bearer_write_repo,
+        ));
+
         let services = Services {
             expense_entry_service: expense_entry_service.clone(),
+            cost_bearer_service: cost_bearer_service.clone(),
         };
 
         crate::api::routes::setup_routing()

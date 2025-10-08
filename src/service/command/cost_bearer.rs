@@ -1,29 +1,20 @@
 use uuid::Uuid;
 
 use crate::domain::cost_bearer::CostBearer;
-use crate::service::application_error::{ApplicationError, ApplicationErrorType};
-use crate::service::cost_bearer::CostBearerNew;
+use crate::service::application_error::ApplicationError;
+use crate::service::cost_bearer::{CostBearerNew, CostBearerService};
 
-use crate::test_util::test_utility::TEST_VALID_UUID;
+impl CostBearerService {
+    pub fn create(&self, dto: CostBearerNew) -> Result<CostBearer, ApplicationError> {
+        let cost_bearer = CostBearer::try_from(dto)?;
+        self.write_repo.insert(cost_bearer)
+    }
 
-pub fn create(dto: CostBearerNew) -> Result<CostBearer, ApplicationError> {
-    let cost_bearer = CostBearer::try_from(dto)?;
+    pub fn update(&self, id: Uuid, dto: CostBearerNew) -> Result<CostBearer, ApplicationError> {
+        todo!()
+    }
 
-    // todo - save to DB
-
-    Ok(cost_bearer)
-}
-
-pub fn update(id: Uuid, dto: CostBearerNew) -> Result<CostBearer, ApplicationError> {
-    todo!()
-}
-
-pub fn delete(id: Uuid) -> Result<(), ApplicationError> {
-    match id {
-        id if id == TEST_VALID_UUID => Ok(()),
-        _ => Err(ApplicationError {
-            error_type: ApplicationErrorType::NotFound,
-            message: String::from("Cost Bearer not found."),
-        }),
+    pub fn delete(&self, id: Uuid) -> Result<(), ApplicationError> {
+        self.write_repo.delete(id)
     }
 }

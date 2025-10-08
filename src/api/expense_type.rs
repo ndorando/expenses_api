@@ -38,11 +38,12 @@ mod tests {
     use std::sync::Arc;
 
     use crate::api::routes::Services;
-    use crate::repository::sqliterepository::expense_entry::{
-        ExpenseEntryReadSqliteRepository, ExpenseEntryWriteSqliteRepository,
+    use crate::repository::sqliterepository::{
+        cost_bearer::{CostBearerReadSqliteRepository, CostBearerWriteSqliteRepository},
+        expense_entry::{ExpenseEntryReadSqliteRepository, ExpenseEntryWriteSqliteRepository},
     };
-    use crate::service::expense_entry::ExpenseEntryService;
     use crate::service::expense_type::ExpenseTypeNew;
+    use crate::service::{cost_bearer::CostBearerService, expense_entry::ExpenseEntryService};
     use crate::test_util::test_utility::{TEST_INVALID_UUID, TEST_VALID_UUID};
     use axum::Router;
     use axum::{
@@ -54,11 +55,23 @@ mod tests {
     use tower::ServiceExt;
 
     async fn setup_test_app() -> Router {
-        let read_repo = Arc::new(ExpenseEntryReadSqliteRepository::new());
-        let write_repo = Arc::new(ExpenseEntryWriteSqliteRepository::new());
-        let expense_entry_service = Arc::new(ExpenseEntryService::new(read_repo, write_repo));
+        let expense_entry_read_repo = Arc::new(ExpenseEntryReadSqliteRepository::new());
+        let expense_entry_write_repo = Arc::new(ExpenseEntryWriteSqliteRepository::new());
+        let expense_entry_service = Arc::new(ExpenseEntryService::new(
+            expense_entry_read_repo,
+            expense_entry_write_repo,
+        ));
+
+        let cost_bearer_read_repo = Arc::new(CostBearerReadSqliteRepository::new());
+        let cost_bearer_write_repo = Arc::new(CostBearerWriteSqliteRepository::new());
+        let cost_bearer_service = Arc::new(CostBearerService::new(
+            cost_bearer_read_repo,
+            cost_bearer_write_repo,
+        ));
+
         let services = Services {
             expense_entry_service: expense_entry_service.clone(),
+            cost_bearer_service: cost_bearer_service.clone(),
         };
 
         crate::api::routes::setup_routing()

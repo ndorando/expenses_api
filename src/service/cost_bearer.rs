@@ -1,4 +1,6 @@
 use chrono::{DateTime, Utc};
+use std::sync::Arc;
+use uuid::Uuid;
 
 use crate::domain::cost_bearer::{CostBearer, CostBearerValidationError};
 use crate::service::application_error::{ApplicationError, ApplicationErrorType};
@@ -31,4 +33,32 @@ impl From<CostBearerValidationError> for ApplicationError {
             },
         }
     }
+}
+
+#[derive(Clone)]
+pub struct CostBearerService {
+    pub(in crate::service) read_repo: Arc<dyn CostBearerReadPort + Send + Sync>,
+    pub(in crate::service) write_repo: Arc<dyn CostBearerWritePort + Send + Sync>,
+}
+
+impl CostBearerService {
+    pub fn new(
+        read_repo: Arc<dyn CostBearerReadPort + Send + Sync>,
+        write_repo: Arc<dyn CostBearerWritePort + Send + Sync>,
+    ) -> Self {
+        CostBearerService {
+            read_repo,
+            write_repo,
+        }
+    }
+}
+
+pub trait CostBearerReadPort {
+    fn get(&self, id: Uuid) -> Result<CostBearer, ApplicationError>;
+}
+
+pub trait CostBearerWritePort {
+    fn insert(&self, entry: CostBearer) -> Result<CostBearer, ApplicationError>;
+    fn update(&self, id: Uuid, entry: CostBearer) -> Result<CostBearer, ApplicationError>;
+    fn delete(&self, id: Uuid) -> Result<(), ApplicationError>;
 }

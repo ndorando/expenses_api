@@ -1,10 +1,8 @@
 use uuid::Uuid;
 
 use crate::domain::expense_entry::ExpenseEntry;
-use crate::service::application_error::{ApplicationError, ApplicationErrorType};
+use crate::service::application_error::ApplicationError;
 use crate::service::expense_entry::{ExpenseEntryNew, ExpenseEntryService};
-
-use crate::test_util::test_utility::TEST_VALID_UUID;
 
 impl ExpenseEntryService {
     pub fn create(&self, dto: ExpenseEntryNew) -> Result<ExpenseEntry, ApplicationError> {

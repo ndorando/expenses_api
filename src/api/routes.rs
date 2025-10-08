@@ -13,11 +13,13 @@ use crate::api::expense_entry::{
 use crate::api::expense_type::{
     expense_type_delete, expense_type_get, expense_type_post, expense_type_update,
 };
+use crate::service::cost_bearer::CostBearerService;
 use crate::service::expense_entry::ExpenseEntryService;
 
 #[derive(Clone)]
 pub struct Services {
     pub expense_entry_service: Arc<ExpenseEntryService>,
+    pub cost_bearer_service: Arc<CostBearerService>,
 }
 
 pub async fn setup_routing() -> Router<Services> {
