@@ -15,10 +15,13 @@ use repository::sqliterepository::cost_bearer::{
 use repository::sqliterepository::expense_entry::{
     ExpenseEntryReadSqliteRepository, ExpenseEntryWriteSqliteRepository,
 };
+use repository::sqliterepository::expense_type::{
+    ExpenseTypeReadSqliteRepository, ExpenseTypeWriteSqliteRepository,
+};
 
 use crate::{
     api::routes::Services, service::cost_bearer::CostBearerService,
-    service::expense_entry::ExpenseEntryService,
+    service::expense_entry::ExpenseEntryService, service::expense_type::ExpenseTypeService,
 };
 
 #[tokio::main]
@@ -30,6 +33,13 @@ async fn main() {
         expense_entry_write_repo,
     ));
 
+    let expense_type_read_repo = Arc::new(ExpenseTypeReadSqliteRepository::new());
+    let expense_type_write_repo = Arc::new(ExpenseTypeWriteSqliteRepository::new());
+    let expense_type_service = Arc::new(ExpenseTypeService::new(
+        expense_type_read_repo,
+        expense_type_write_repo,
+    ));
+
     let cost_bearer_read_repo = Arc::new(CostBearerReadSqliteRepository::new());
     let cost_bearer_write_repo = Arc::new(CostBearerWriteSqliteRepository::new());
     let cost_bearer_service = Arc::new(CostBearerService::new(
@@ -39,6 +49,7 @@ async fn main() {
 
     let services = Services {
         expense_entry_service: expense_entry_service.clone(),
+        expense_type_service: expense_type_service.clone(),
         cost_bearer_service: cost_bearer_service.clone(),
     };
 

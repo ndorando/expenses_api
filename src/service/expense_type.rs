@@ -1,3 +1,6 @@
+use std::sync::Arc;
+use uuid::Uuid;
+
 use crate::domain::expense_type::{ExpenseType, ExpenseTypeValidationError};
 use crate::service::application_error::{ApplicationError, ApplicationErrorType};
 
@@ -32,4 +35,32 @@ impl From<ExpenseTypeValidationError> for ApplicationError {
             },
         }
     }
+}
+
+#[derive(Clone)]
+pub struct ExpenseTypeService {
+    pub(in crate::service) read_repo: Arc<dyn ExpenseTypeReadPort + Send + Sync>,
+    pub(in crate::service) write_repo: Arc<dyn ExpenseTypeWritePort + Send + Sync>,
+}
+
+impl ExpenseTypeService {
+    pub fn new(
+        read_repo: Arc<dyn ExpenseTypeReadPort + Send + Sync>,
+        write_repo: Arc<dyn ExpenseTypeWritePort + Send + Sync>,
+    ) -> Self {
+        ExpenseTypeService {
+            read_repo,
+            write_repo,
+        }
+    }
+}
+
+pub trait ExpenseTypeReadPort {
+    fn get(&self, id: Uuid) -> Result<ExpenseType, ApplicationError>;
+}
+
+pub trait ExpenseTypeWritePort {
+    fn insert(&self, entry: ExpenseType) -> Result<ExpenseType, ApplicationError>;
+    fn update(&self, id: Uuid, entry: ExpenseType) -> Result<ExpenseType, ApplicationError>;
+    fn delete(&self, id: Uuid) -> Result<(), ApplicationError>;
 }

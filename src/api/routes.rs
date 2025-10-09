@@ -15,10 +15,12 @@ use crate::api::expense_type::{
 };
 use crate::service::cost_bearer::CostBearerService;
 use crate::service::expense_entry::ExpenseEntryService;
+use crate::service::expense_type::ExpenseTypeService;
 
 #[derive(Clone)]
 pub struct Services {
     pub expense_entry_service: Arc<ExpenseEntryService>,
+    pub expense_type_service: Arc<ExpenseTypeService>,
     pub cost_bearer_service: Arc<CostBearerService>,
 }
 

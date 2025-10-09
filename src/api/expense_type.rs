@@ -1,36 +1,44 @@
-use axum::{Json, extract::Path, http::StatusCode};
+use axum::{Json, extract::Path, extract::State, http::StatusCode};
 use uuid::Uuid;
 
+use crate::api::routes::Services;
 use crate::domain::expense_type::ExpenseType;
 use crate::service::application_error::ApplicationError;
 use crate::service::expense_type::ExpenseTypeNew;
 
 pub async fn expense_type_post(
-    expense_type: Json<ExpenseTypeNew>,
+    State(services): State<Services>,
+    entry: Json<ExpenseTypeNew>,
 ) -> Result<Json<ExpenseType>, ApplicationError> {
-    let new_expense_type_dto: ExpenseTypeNew = expense_type.0;
-    let created_expense_type = crate::service::command::expense_type::create(new_expense_type_dto)?;
-    Ok(Json(created_expense_type))
+    let new_entry_dto: ExpenseTypeNew = entry.0;
+    let created_entry = services.expense_type_service.create(new_entry_dto)?;
+    Ok(Json(created_entry))
 }
 
 pub async fn expense_type_update(
+    State(services): State<Services>,
     Path(id): Path<Uuid>,
-    expense_type: Json<ExpenseTypeNew>,
+    entry: Json<ExpenseTypeNew>,
 ) -> Result<Json<ExpenseType>, ApplicationError> {
-    let update_expense_type_dto: ExpenseTypeNew = expense_type.0;
-    let updated_expense_type =
-        crate::service::command::expense_type::update(id, update_expense_type_dto)?;
-    Ok(Json(updated_expense_type))
+    let update_entry_dto: ExpenseTypeNew = entry.0;
+    let updated_entry = services.expense_type_service.update(id, update_entry_dto)?;
+    Ok(Json(updated_entry))
 }
 
-pub async fn expense_type_delete(Path(id): Path<Uuid>) -> Result<StatusCode, ApplicationError> {
-    crate::service::command::expense_type::delete(id)?;
+pub async fn expense_type_delete(
+    State(services): State<Services>,
+    Path(id): Path<Uuid>,
+) -> Result<StatusCode, ApplicationError> {
+    services.expense_type_service.delete(id)?;
     Ok(StatusCode::NO_CONTENT)
 }
 
-pub async fn expense_type_get(Path(id): Path<Uuid>) -> Result<Json<ExpenseType>, ApplicationError> {
-    let found_expense_type = crate::service::query::expense_type::get(id)?;
-    Ok(Json(found_expense_type))
+pub async fn expense_type_get(
+    State(services): State<Services>,
+    Path(id): Path<Uuid>,
+) -> Result<Json<ExpenseType>, ApplicationError> {
+    let found_entry = services.expense_type_service.get(id)?;
+    Ok(Json(found_entry))
 }
 
 #[cfg(test)]
@@ -41,9 +49,13 @@ mod tests {
     use crate::repository::sqliterepository::{
         cost_bearer::{CostBearerReadSqliteRepository, CostBearerWriteSqliteRepository},
         expense_entry::{ExpenseEntryReadSqliteRepository, ExpenseEntryWriteSqliteRepository},
+        expense_type::{ExpenseTypeReadSqliteRepository, ExpenseTypeWriteSqliteRepository},
     };
     use crate::service::expense_type::ExpenseTypeNew;
-    use crate::service::{cost_bearer::CostBearerService, expense_entry::ExpenseEntryService};
+    use crate::service::{
+        cost_bearer::CostBearerService, expense_entry::ExpenseEntryService,
+        expense_type::ExpenseTypeService,
+    };
     use crate::test_util::test_utility::{TEST_INVALID_UUID, TEST_VALID_UUID};
     use axum::Router;
     use axum::{
@@ -62,6 +74,13 @@ mod tests {
             expense_entry_write_repo,
         ));
 
+        let expense_type_read_repo = Arc::new(ExpenseTypeReadSqliteRepository::new());
+        let expense_type_write_repo = Arc::new(ExpenseTypeWriteSqliteRepository::new());
+        let expense_type_service = Arc::new(ExpenseTypeService::new(
+            expense_type_read_repo,
+            expense_type_write_repo,
+        ));
+
         let cost_bearer_read_repo = Arc::new(CostBearerReadSqliteRepository::new());
         let cost_bearer_write_repo = Arc::new(CostBearerWriteSqliteRepository::new());
         let cost_bearer_service = Arc::new(CostBearerService::new(
@@ -71,6 +90,7 @@ mod tests {
 
         let services = Services {
             expense_entry_service: expense_entry_service.clone(),
+            expense_type_service: expense_type_service.clone(),
             cost_bearer_service: cost_bearer_service.clone(),
         };
 

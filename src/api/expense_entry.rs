@@ -53,8 +53,12 @@ mod tests {
         repository::sqliterepository::{
             cost_bearer::{CostBearerReadSqliteRepository, CostBearerWriteSqliteRepository},
             expense_entry::{ExpenseEntryReadSqliteRepository, ExpenseEntryWriteSqliteRepository},
+            expense_type::{ExpenseTypeReadSqliteRepository, ExpenseTypeWriteSqliteRepository},
         },
-        service::{cost_bearer::CostBearerService, expense_entry::ExpenseEntryService},
+        service::{
+            cost_bearer::CostBearerService, expense_entry::ExpenseEntryService,
+            expense_type::ExpenseTypeService,
+        },
     };
 
     use super::*;
@@ -77,6 +81,13 @@ mod tests {
             expense_entry_write_repo,
         ));
 
+        let expense_type_read_repo = Arc::new(ExpenseTypeReadSqliteRepository::new());
+        let expense_type_write_repo = Arc::new(ExpenseTypeWriteSqliteRepository::new());
+        let expense_type_service = Arc::new(ExpenseTypeService::new(
+            expense_type_read_repo,
+            expense_type_write_repo,
+        ));
+
         let cost_bearer_read_repo = Arc::new(CostBearerReadSqliteRepository::new());
         let cost_bearer_write_repo = Arc::new(CostBearerWriteSqliteRepository::new());
         let cost_bearer_service = Arc::new(CostBearerService::new(
@@ -86,6 +97,7 @@ mod tests {
 
         let services = Services {
             expense_entry_service: expense_entry_service.clone(),
+            expense_type_service: expense_type_service.clone(),
             cost_bearer_service: cost_bearer_service.clone(),
         };
 
