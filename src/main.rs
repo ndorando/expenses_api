@@ -48,9 +48,9 @@ async fn main() {
     ));
 
     let services = Services {
-        expense_entry_service: expense_entry_service.clone(),
-        expense_type_service: expense_type_service.clone(),
-        cost_bearer_service: cost_bearer_service.clone(),
+        expense_entry_service,
+        expense_type_service,
+        cost_bearer_service,
     };
 
     let router = setup_routing().await.with_state(services);

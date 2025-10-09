@@ -45,7 +45,7 @@ impl ExpenseTypeWritePort for ExpenseTypeWriteSqliteRepository {
         Ok(entry)
     }
 
-    fn update(&self, id: Uuid, entry: ExpenseType) -> Result<ExpenseType, ApplicationError> {
+    fn update(&self, _id: Uuid, _entry: ExpenseType) -> Result<ExpenseType, ApplicationError> {
         todo!()
     }
 

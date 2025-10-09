@@ -10,7 +10,11 @@ impl ExpenseEntryService {
         self.write_repo.insert(expense_entry)
     }
 
-    pub fn update(&self, id: Uuid, dto: ExpenseEntryNew) -> Result<ExpenseEntry, ApplicationError> {
+    pub fn update(
+        &self,
+        _id: Uuid,
+        _dto: ExpenseEntryNew,
+    ) -> Result<ExpenseEntry, ApplicationError> {
         todo!()
     }
 

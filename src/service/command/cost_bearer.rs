@@ -10,7 +10,7 @@ impl CostBearerService {
         self.write_repo.insert(cost_bearer)
     }
 
-    pub fn update(&self, id: Uuid, dto: CostBearerNew) -> Result<CostBearer, ApplicationError> {
+    pub fn update(&self, _id: Uuid, _dto: CostBearerNew) -> Result<CostBearer, ApplicationError> {
         todo!()
     }
 

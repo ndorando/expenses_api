@@ -47,7 +47,7 @@ impl CostBearerWritePort for CostBearerWriteSqliteRepository {
         Ok(entry)
     }
 
-    fn update(&self, id: Uuid, entry: CostBearer) -> Result<CostBearer, ApplicationError> {
+    fn update(&self, _id: Uuid, _entry: CostBearer) -> Result<CostBearer, ApplicationError> {
         todo!()
     }
 
