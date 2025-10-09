@@ -34,6 +34,9 @@ impl CostBearerReadPort for CostBearerReadSqliteRepository {
                 Utc.with_ymd_and_hms(2026, 1, 1, 0, 0, 0).unwrap(),
             )
             .unwrap()),
+            TEST_INVALID_UUID => {
+                panic!("Invalid UUID found!")
+            }
             _ => Err(ApplicationError {
                 error_type: ApplicationErrorType::NotFound,
                 message: String::from("Cost bearer not found."),

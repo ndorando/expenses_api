@@ -20,10 +20,10 @@ pub async fn cost_bearer_update(
     State(services): State<Services>,
     Path(id): Path<Uuid>,
     entry: Json<CostBearerNew>,
-) -> Result<Json<CostBearer>, ApplicationError> {
+) -> Result<CostBearer, ApplicationError> {
     let update_entry_dto: CostBearerNew = entry.0;
     let updated_entry = services.cost_bearer_service.update(id, update_entry_dto)?;
-    Ok(Json(updated_entry))
+    Ok(updated_entry)
 }
 
 pub async fn cost_bearer_delete(

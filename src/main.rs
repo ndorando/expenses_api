@@ -53,7 +53,7 @@ async fn main() {
         cost_bearer_service,
     };
 
-    let router = setup_routing().await.with_state(services);
+    let router = setup_routing().with_state(services);
     let addr = "0.0.0.0:6570";
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
 
